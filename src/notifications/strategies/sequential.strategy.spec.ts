@@ -75,7 +75,6 @@ describe('SequentialStrategy', () => {
   });
 
   it('should throw an error with attempt count if all channels fail', async () => {
-    и;
     emailSendSpy.mockRejectedValue(new Error('SMTP Error'));
     bitrixSendSpy.mockRejectedValue(new Error('Bitrix Error'));
 
