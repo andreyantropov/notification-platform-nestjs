@@ -19,16 +19,16 @@ describe('SequentialStrategy', () => {
     ],
   };
 
-  let emailSendSpy: jest.Mock<Promise<void>, [Contact, string]>;
-  let bitrixSendSpy: jest.Mock<Promise<void>, [Contact, string]>;
+  let emailSendSpy: jest.Mock;
+  let bitrixSendSpy: jest.Mock;
 
   let mockEmailChannel: Channel;
   let mockBitrixChannel: Channel;
   let channels: readonly Channel[];
 
   beforeEach(() => {
-    emailSendSpy = jest.fn();
-    bitrixSendSpy = jest.fn();
+    emailSendSpy = jest.fn<Promise<void>, [Contact, string]>();
+    bitrixSendSpy = jest.fn<Promise<void>, [Contact, string]>();
 
     mockEmailChannel = {
       type: Provider.EMAIL,
@@ -54,7 +54,7 @@ describe('SequentialStrategy', () => {
     expect(bitrixSendSpy).not.toHaveBeenCalled();
 
     expect(emailSendSpy).toHaveBeenCalledWith(
-      mockNotification.contacts,
+      mockNotification.contacts[0],
       mockNotification.message,
     );
   });
@@ -69,7 +69,7 @@ describe('SequentialStrategy', () => {
     expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
 
     expect(bitrixSendSpy).toHaveBeenCalledWith(
-      mockNotification.contacts,
+      mockNotification.contacts[1],
       mockNotification.message,
     );
   });

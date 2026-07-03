@@ -27,8 +27,8 @@ describe('BroadcastStrategy', () => {
   let channels: readonly Channel[];
 
   beforeEach(() => {
-    emailSendSpy = jest.fn();
-    bitrixSendSpy = jest.fn();
+    emailSendSpy = jest.fn<Promise<void>, [Contact, string]>();
+    bitrixSendSpy = jest.fn<Promise<void>, [Contact, string]>();
 
     mockEmailChannel = {
       type: Provider.EMAIL,
