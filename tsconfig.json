@@ -17,18 +17,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "types": [
-      "node",
-      "jest"
-    ],
-    "baseUrl": "./",
+    "types": ["node", "jest"],
     "paths": {
-      "@app/shared": [
-        "libs/shared/src"
-      ],
-      "@app/shared/*": [
-        "libs/shared/src/*"
-      ]
+      "@app/shared": ["./libs/shared/src"],
+      "@app/shared/*": ["./libs/shared/src/*"]
     }
   }
 }
