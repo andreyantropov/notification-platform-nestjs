@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Mode } from '../enums/mode.enum';
 import { Strategy } from '../types/strategy.type';
 import { sequentialStrategy } from './sequential.strategy';
 import { broadcastStrategy } from './broadcast.strategy';
 import { raceStrategy } from './race.strategy';
+import { Mode } from '@app/shared/enums/mode.enum';
 
 @Injectable()
 export class StrategyFactory {

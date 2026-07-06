@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Channel } from '../interfaces/channel.interface';
-import { Contact } from '../interfaces/contact.interface';
-import { Provider } from '../enums/provider.enum';
+import { Provider } from '@app/shared/enums/provider.enum';
+import { Contact } from '@app/shared/interfaces/contact.interface';
 
 @Injectable()
 export class MockBitrixChannel implements Channel {

@@ -1,5 +1,5 @@
 import { Channel } from '../interfaces/channel.interface';
-import { Notification } from '../interfaces/notification.interface';
+import { Notification } from '@app/shared/interfaces/notification.interface';
 import { Strategy } from '../types/strategy.type';
 import { getAttempts } from './utils/get-attempts.util';
 

@@ -1,5 +1,5 @@
+import { Contact } from '@app/shared/interfaces/contact.interface';
 import { Channel } from '../../interfaces/channel.interface';
-import { Contact } from '../../interfaces/contact.interface';
 import { Attempt } from '../interfaces/attempt.interface';
 
 export const getAttempts = (

@@ -1,7 +1,7 @@
 import { getAttempts } from './get-attempts.util';
 import { Channel } from '../../interfaces/channel.interface';
-import { Contact } from '../../interfaces/contact.interface';
-import { Provider } from '../../enums/provider.enum';
+import { Contact } from '@app/shared/interfaces/contact.interface';
+import { Provider } from '@app/shared/enums/provider.enum';
 
 describe('getAttempts', () => {
   const mockEmailContact: Contact = {

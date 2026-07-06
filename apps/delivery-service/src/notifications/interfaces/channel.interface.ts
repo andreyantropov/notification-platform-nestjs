@@ -1,5 +1,5 @@
-import { Provider } from '../enums/provider.enum';
-import { Contact } from './contact.interface';
+import { Provider } from '@app/shared/enums/provider.enum';
+import { Contact } from '@app/shared/interfaces/contact.interface';
 
 export interface Channel {
   readonly type: Provider;

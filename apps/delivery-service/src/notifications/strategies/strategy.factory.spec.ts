@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StrategyFactory } from './strategy.factory';
-import { Mode } from '../enums/mode.enum';
 import { sequentialStrategy } from './sequential.strategy';
 import { broadcastStrategy } from './broadcast.strategy';
 import { raceStrategy } from './race.strategy';
+import { Mode } from '@app/shared/enums/mode.enum';
 
 describe('StrategyFactory', () => {
   let factory: StrategyFactory;

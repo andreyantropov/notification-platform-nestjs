@@ -1,9 +1,9 @@
 import { sequentialStrategy } from './sequential.strategy';
-import { Notification } from '../interfaces/notification.interface';
+import { Notification } from '@app/shared/interfaces/notification.interface';
 import { Channel } from '../interfaces/channel.interface';
-import { Contact } from '../interfaces/contact.interface';
-import { Mode } from '../enums/mode.enum';
-import { Provider } from '../enums/provider.enum';
+import { Mode } from '@app/shared/enums/mode.enum';
+import { Provider } from '@app/shared/enums/provider.enum';
+import { Contact } from '@app/shared/interfaces/contact.interface';
 
 describe('SequentialStrategy', () => {
   const mockNotification: Notification = {
