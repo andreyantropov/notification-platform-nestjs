@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { InjectionToken } from '@nestjs/common'; // 👈 Импортируем InjectionToken
 import { BitrixChannel } from './bitrix.channel';
 import type { BitrixConfig } from './interfaces/bitrix-config.interface';
 import { BitrixResponse } from './interfaces/bitrix-responce.interface';
@@ -10,7 +11,7 @@ import { Contact } from '@app/shared/interfaces/contact.interface';
 
 describe('BitrixChannel', () => {
   let channel: BitrixChannel;
-  let httpService: HttpService;
+  let mockHttpPost: jest.Mock; // 👈 Объявляем переменную для шпиона, чтобы ESLint не ругался
 
   const mockConfig: BitrixConfig = {
     baseUrl: 'https://bitrix24.ru',
@@ -30,26 +31,27 @@ describe('BitrixChannel', () => {
   });
 
   beforeEach(async () => {
-    const mockHttpService = {
-      post: jest.fn(),
-    };
+    // Создаем строго типизированную функцию-заглушку
+    mockHttpPost = jest.fn();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BitrixChannel,
         {
           provide: HttpService,
-          useValue: mockHttpService,
+          useValue: {
+            post: mockHttpPost, // 👈 Передаем наш шпион в объект
+          },
         },
         {
-          provide: 'BitrixConfig',
+          // Чиним ошибку DI: кастуем интерфейс в InjectionToken
+          provide: BitrixConfig as unknown as InjectionToken,
           useValue: mockConfig,
         },
       ],
     }).compile();
 
     channel = module.get<BitrixChannel>(BitrixChannel);
-    httpService = module.get<HttpService>(HttpService);
   });
 
   it('should be successfully initialized', () => {
@@ -58,10 +60,7 @@ describe('BitrixChannel', () => {
   });
 
   it('should support BITRIX contact type', () => {
-    const validContact: Contact = {
-      type: Provider.BITRIX,
-      value: '14253',
-    };
+    const validContact: Contact = { type: Provider.BITRIX, value: '14253' };
     expect(channel.isSupports(validContact)).toBe(true);
   });
 
@@ -74,31 +73,25 @@ describe('BitrixChannel', () => {
   });
 
   it('should successfully send notification when Bitrix returns result', async () => {
-    const contact: Contact = {
-      type: Provider.BITRIX,
-      value: '14253',
-    };
+    const contact: Contact = { type: Provider.BITRIX, value: '14253' };
     const message = 'Test Bitrix payload';
 
     const axiosResponse = createAxiosResponse({ result: 42 });
-    jest.spyOn(httpService, 'post').mockReturnValue(of(axiosResponse));
+    mockHttpPost.mockReturnValue(of(axiosResponse)); // 👈 Используем чистый шпион без spyOn
 
     await expect(channel.send(contact, message)).resolves.not.toThrow();
-    expect(httpService.post).toHaveBeenCalledTimes(1);
+    expect(mockHttpPost).toHaveBeenCalledTimes(1); // 👈 ESLint доволен, контекст не теряется!
   });
 
   it('should throw an error when Bitrix returns an explicit API error', async () => {
-    const contact: Contact = {
-      type: Provider.BITRIX,
-      value: '14253',
-    };
+    const contact: Contact = { type: Provider.BITRIX, value: '14253' };
     const message = 'Test Bitrix payload';
 
     const axiosResponse = createAxiosResponse({
       error: 'INVALID_CREDENTIALS',
       error_description: 'Invalid request credentials',
     });
-    jest.spyOn(httpService, 'post').mockReturnValue(of(axiosResponse));
+    mockHttpPost.mockReturnValue(of(axiosResponse));
 
     await expect(channel.send(contact, message)).rejects.toThrow(
       'INVALID_CREDENTIALS: Invalid request credentials',
@@ -106,16 +99,11 @@ describe('BitrixChannel', () => {
   });
 
   it('should throw an error when network request completely fails', async () => {
-    const contact: Contact = {
-      type: Provider.BITRIX,
-      value: '14253',
-    };
+    const contact: Contact = { type: Provider.BITRIX, value: '14253' };
     const message = 'Test Bitrix payload';
 
     const networkError = new Error('Gateway Timeout');
-    jest
-      .spyOn(httpService, 'post')
-      .mockReturnValue(throwError(() => networkError));
+    mockHttpPost.mockReturnValue(throwError(() => networkError));
 
     await expect(channel.send(contact, message)).rejects.toThrow(
       'Не удалось отправить уведомление через Bitrix',

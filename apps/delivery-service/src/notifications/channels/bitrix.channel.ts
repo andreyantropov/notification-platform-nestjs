@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
 import type { BitrixConfig } from './interfaces/bitrix-config.interface';
 import { Channel } from '../interfaces/channel.interface';
@@ -24,19 +24,22 @@ export class BitrixChannel implements Channel {
 
   async send(contact: Contact, message: string): Promise<void> {
     try {
-      const response = await firstValueFrom(
-        this.httpService.post<BitrixResponse>(
-          this.url,
-          { user_id: contact.value, message },
-          { timeout: this.config.timeoutMs },
-        ),
+      await firstValueFrom(
+        this.httpService
+          .post<BitrixResponse>(
+            this.url,
+            { user_id: contact.value, message },
+            { timeout: this.config.timeoutMs },
+          )
+          .pipe(
+            map((res) => res.data),
+            tap((data) => {
+              if (data.error) {
+                throw new Error(`${data.error}: ${data.error_description}`);
+              }
+            }),
+          ),
       );
-
-      if (response.data.error) {
-        throw new Error(
-          `${response.data.error}: ${response.data.error_description}`,
-        );
-      }
     } catch (error) {
       throw new Error(`Не удалось отправить уведомление через Bitrix`, {
         cause: error,
