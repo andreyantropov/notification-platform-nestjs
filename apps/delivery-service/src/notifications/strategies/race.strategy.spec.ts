@@ -1,11 +1,39 @@
 import { raceStrategy } from './race.strategy';
-import { Notification } from '@app/shared/interfaces/notification.interface';
-import { Channel } from '../interfaces/channel.interface';
-import { Mode } from '@app/shared/enums/mode.enum';
-import { Provider } from '@app/shared/enums/provider.enum';
-import { Contact } from '@app/shared/interfaces/contact.interface';
+import { Notification } from '@app/shared';
+import { Channel } from '../abstracts/channel.abstract';
+import { Mode } from '@app/shared';
+import { Provider } from '@app/shared';
+import { Contact } from '@app/shared';
 
 describe('RaceStrategy', () => {
+  class TestEmailChannel extends Channel {
+    protected readonly type = Provider.EMAIL;
+
+    constructor(
+      private readonly sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
+    ) {
+      super();
+    }
+
+    async send(contact: Contact, message: string): Promise<void> {
+      return this.sendSpy(contact, message);
+    }
+  }
+
+  class TestBitrixChannel extends Channel {
+    protected readonly type = Provider.BITRIX;
+
+    constructor(
+      private readonly sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
+    ) {
+      super();
+    }
+
+    async send(contact: Contact, message: string): Promise<void> {
+      return this.sendSpy(contact, message);
+    }
+  }
+
   const mockNotification: Notification = {
     id: 'notif-race',
     correlationId: 'corr-race',
@@ -30,17 +58,8 @@ describe('RaceStrategy', () => {
     emailSendSpy = jest.fn<Promise<void>, [Contact, string]>();
     bitrixSendSpy = jest.fn<Promise<void>, [Contact, string]>();
 
-    mockEmailChannel = {
-      type: Provider.EMAIL,
-      isSupports: (contact: Contact) => contact.type === Provider.EMAIL,
-      send: emailSendSpy,
-    };
-
-    mockBitrixChannel = {
-      type: Provider.BITRIX,
-      isSupports: (contact: Contact) => contact.type === Provider.BITRIX,
-      send: bitrixSendSpy,
-    };
+    mockEmailChannel = new TestEmailChannel(emailSendSpy);
+    mockBitrixChannel = new TestBitrixChannel(bitrixSendSpy);
 
     channels = [mockEmailChannel, mockBitrixChannel];
   });

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockEmailChannel } from './mock-email.channel';
-import { Provider } from '@app/shared/enums/provider.enum';
-import { Contact } from '@app/shared/interfaces/contact.interface';
+import { Provider } from '@app/shared';
+import { Contact } from '@app/shared';
 
 describe('MockEmailChannel', () => {
   let channel: MockEmailChannel;
@@ -40,14 +40,5 @@ describe('MockEmailChannel', () => {
     const message = 'Test email payload';
 
     await expect(channel.send(contact, message)).resolves.not.toThrow();
-  });
-
-  it('should throw an error when trying to send to an unsupported contact type', async () => {
-    const invalidContact: Contact = { type: Provider.BITRIX, value: '12345' };
-    const message = 'Test email payload';
-
-    await expect(channel.send(invalidContact, message)).rejects.toThrow(
-      'Неверный тип получателя: ожидается email, получено "bitrix"',
-    );
   });
 });

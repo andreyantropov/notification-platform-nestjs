@@ -1,34 +1,31 @@
 import { getAttempts } from './get-attempts.util';
-import { Channel } from '../../interfaces/channel.interface';
-import { Contact } from '@app/shared/interfaces/contact.interface';
-import { Provider } from '@app/shared/enums/provider.enum';
+import { Channel } from '../../abstracts/channel.abstract';
+import { Contact } from '@app/shared';
+import { Provider } from '@app/shared';
 
 describe('getAttempts', () => {
+  class TestEmailChannel extends Channel {
+    protected readonly type = Provider.EMAIL;
+    async send(): Promise<void> {
+      return Promise.resolve();
+    }
+  }
+
+  class TestBitrixChannel extends Channel {
+    protected readonly type = Provider.BITRIX;
+    async send(): Promise<void> {
+      return Promise.resolve();
+    }
+  }
+
   const mockEmailContact: Contact = {
     type: Provider.EMAIL,
     value: 'test@email.com',
   };
   const mockBitrixContact: Contact = { type: Provider.BITRIX, value: '12345' };
 
-  const mockEmailChannel: Channel = {
-    type: Provider.EMAIL,
-    isSupports(contact: Contact): boolean {
-      return contact.type === Provider.EMAIL;
-    },
-    async send(): Promise<void> {
-      return Promise.resolve();
-    },
-  };
-
-  const mockBitrixChannel: Channel = {
-    type: Provider.BITRIX,
-    isSupports(contact: Contact): boolean {
-      return contact.type === Provider.BITRIX;
-    },
-    async send(): Promise<void> {
-      return Promise.resolve();
-    },
-  };
+  const mockEmailChannel = new TestEmailChannel();
+  const mockBitrixChannel = new TestBitrixChannel();
 
   const channels: readonly Channel[] = [mockEmailChannel, mockBitrixChannel];
 
@@ -60,15 +57,7 @@ describe('getAttempts', () => {
   it('should duplicate pairs if multiple channels support the same contact', () => {
     const contacts: readonly Contact[] = [mockEmailContact];
 
-    const secondaryEmailChannel: Channel = {
-      type: Provider.EMAIL,
-      isSupports(contact: Contact): boolean {
-        return contact.type === Provider.EMAIL;
-      },
-      async send(): Promise<void> {
-        return Promise.resolve();
-      },
-    };
+    const secondaryEmailChannel = new TestEmailChannel();
 
     const multipleChannels: readonly Channel[] = [
       mockEmailChannel,

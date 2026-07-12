@@ -1,5 +1,5 @@
-import { Notification } from '@app/shared/interfaces/notification.interface';
-import { Channel } from '../interfaces/channel.interface';
+import { Notification } from '@app/shared';
+import { Channel } from '../abstracts/channel.abstract';
 
 export type Strategy = (
   notification: Notification,

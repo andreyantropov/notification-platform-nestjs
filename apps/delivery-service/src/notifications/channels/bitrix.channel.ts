@@ -2,24 +2,26 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
-import type { BitrixConfig } from './interfaces/bitrix-config.interface';
-import { Channel } from '../interfaces/channel.interface';
-import { BitrixResponse } from './interfaces/bitrix-responce.interface';
+import { Channel } from '../abstracts/channel.abstract';
+import { BitrixChannelConfig } from './bitrix.channel.config';
+
+interface BitrixResponse {
+  readonly result?: unknown;
+  readonly error?: string;
+  readonly error_description?: string;
+}
 
 @Injectable()
-export class BitrixChannel implements Channel {
+export class BitrixChannel extends Channel {
   readonly type = Provider.BITRIX;
-  private readonly url: string;
+  private readonly baseUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly config: BitrixConfig,
+    private readonly config: BitrixChannelConfig,
   ) {
-    this.url = `${this.config.baseUrl}/rest/${this.config.userId}/${this.config.authToken}/im.notify.personal.add.json`;
-  }
-
-  isSupports(contact: Contact): boolean {
-    return contact.type === this.type;
+    super();
+    this.baseUrl = `${this.config.url}/rest/${this.config.userId}/${this.config.authToken}`;
   }
 
   async send(contact: Contact, message: string): Promise<void> {
@@ -27,7 +29,7 @@ export class BitrixChannel implements Channel {
       await firstValueFrom(
         this.httpService
           .post<BitrixResponse>(
-            this.url,
+            `${this.baseUrl}/im.notify.personal.add.json`,
             { user_id: contact.value, message },
             { timeout: this.config.timeoutMs },
           )

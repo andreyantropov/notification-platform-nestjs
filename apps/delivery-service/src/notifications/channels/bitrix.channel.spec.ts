@@ -2,19 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { InjectionToken } from '@nestjs/common'; // 👈 Импортируем InjectionToken
 import { BitrixChannel } from './bitrix.channel';
-import type { BitrixConfig } from './interfaces/bitrix-config.interface';
-import { BitrixResponse } from './interfaces/bitrix-responce.interface';
-import { Provider } from '@app/shared/enums/provider.enum';
-import { Contact } from '@app/shared/interfaces/contact.interface';
+import { BitrixChannelConfig } from './bitrix.channel.config';
+import { Provider, Contact } from '@app/shared';
+
+interface BitrixResponse {
+  readonly result?: unknown;
+  readonly error?: string;
+  readonly error_description?: string;
+}
 
 describe('BitrixChannel', () => {
   let channel: BitrixChannel;
-  let mockHttpPost: jest.Mock; // 👈 Объявляем переменную для шпиона, чтобы ESLint не ругался
+  let mockHttpPost: jest.Mock;
 
-  const mockConfig: BitrixConfig = {
-    baseUrl: 'https://bitrix24.ru',
+  const mockConfig: BitrixChannelConfig = {
+    url: 'https://bitrix24.ru',
     userId: '1',
     authToken: 'secret-token',
     timeoutMs: 5000,
@@ -31,7 +34,6 @@ describe('BitrixChannel', () => {
   });
 
   beforeEach(async () => {
-    // Создаем строго типизированную функцию-заглушку
     mockHttpPost = jest.fn();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -40,12 +42,11 @@ describe('BitrixChannel', () => {
         {
           provide: HttpService,
           useValue: {
-            post: mockHttpPost, // 👈 Передаем наш шпион в объект
+            post: mockHttpPost,
           },
         },
         {
-          // Чиним ошибку DI: кастуем интерфейс в InjectionToken
-          provide: BitrixConfig as unknown as InjectionToken,
+          provide: BitrixChannelConfig,
           useValue: mockConfig,
         },
       ],
@@ -61,6 +62,7 @@ describe('BitrixChannel', () => {
 
   it('should support BITRIX contact type', () => {
     const validContact: Contact = { type: Provider.BITRIX, value: '14253' };
+
     expect(channel.isSupports(validContact)).toBe(true);
   });
 
@@ -77,10 +79,10 @@ describe('BitrixChannel', () => {
     const message = 'Test Bitrix payload';
 
     const axiosResponse = createAxiosResponse({ result: 42 });
-    mockHttpPost.mockReturnValue(of(axiosResponse)); // 👈 Используем чистый шпион без spyOn
+    mockHttpPost.mockReturnValue(of(axiosResponse));
 
     await expect(channel.send(contact, message)).resolves.not.toThrow();
-    expect(mockHttpPost).toHaveBeenCalledTimes(1); // 👈 ESLint доволен, контекст не теряется!
+    expect(mockHttpPost).toHaveBeenCalledTimes(1);
   });
 
   it('should throw an error when Bitrix returns an explicit API error', async () => {
@@ -94,7 +96,7 @@ describe('BitrixChannel', () => {
     mockHttpPost.mockReturnValue(of(axiosResponse));
 
     await expect(channel.send(contact, message)).rejects.toThrow(
-      'INVALID_CREDENTIALS: Invalid request credentials',
+      'Не удалось отправить уведомление через Bitrix',
     );
   });
 

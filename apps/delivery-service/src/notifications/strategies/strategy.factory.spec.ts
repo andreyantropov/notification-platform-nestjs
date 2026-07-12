@@ -3,7 +3,7 @@ import { StrategyFactory } from './strategy.factory';
 import { sequentialStrategy } from './sequential.strategy';
 import { broadcastStrategy } from './broadcast.strategy';
 import { raceStrategy } from './race.strategy';
-import { Mode } from '@app/shared/enums/mode.enum';
+import { Mode } from '@app/shared';
 
 describe('StrategyFactory', () => {
   let factory: StrategyFactory;

@@ -1,5 +1,5 @@
-import { Channel } from '../../interfaces/channel.interface';
-import { Contact } from '../../interfaces/contact.interface';
+import { Contact } from '@app/shared';
+import { Channel } from '../../abstracts/channel.abstract';
 
 export interface Attempt {
   channel: Channel;
