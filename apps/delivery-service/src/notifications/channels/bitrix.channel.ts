@@ -14,14 +14,18 @@ interface BitrixResponse {
 @Injectable()
 export class BitrixChannel extends Channel {
   readonly type = Provider.BITRIX;
+
   private readonly baseUrl: string;
+  private readonly timeoutMs: number;
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly config: BitrixChannelConfig,
+    { url, userId, authToken, timeoutMs }: BitrixChannelConfig,
   ) {
     super();
-    this.baseUrl = `${this.config.url}/rest/${this.config.userId}/${this.config.authToken}`;
+
+    this.baseUrl = `${url}/rest/${userId}/${authToken}`;
+    this.timeoutMs = timeoutMs;
   }
 
   async send(contact: Contact, message: string): Promise<void> {
@@ -30,8 +34,11 @@ export class BitrixChannel extends Channel {
         this.httpService
           .post<BitrixResponse>(
             `${this.baseUrl}/im.notify.personal.add.json`,
-            { user_id: contact.value, message },
-            { timeout: this.config.timeoutMs },
+            {
+              user_id: contact.value,
+              message,
+            },
+            { timeout: this.timeoutMs },
           )
           .pipe(
             map((res) => res.data),

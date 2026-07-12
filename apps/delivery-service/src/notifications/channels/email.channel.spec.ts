@@ -1,38 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { MailerService } from '@nestjs-modules/mailer';
 import { EmailChannel } from './email.channel';
 import { EmailChannelConfig } from './email.channel.config';
 import { Provider, Contact } from '@app/shared';
-import { createTransport } from 'nodemailer';
-
-jest.mock('nodemailer');
 
 describe('EmailChannel', () => {
   let channel: EmailChannel;
-
   let mockSendMail: jest.Mock;
-  let mockVerify: jest.Mock;
 
   const mockConfig: EmailChannelConfig = {
-    transport: {
-      host: '://test.com',
-      port: 587,
-    },
-    fromEmail: 'noreply@test.com',
+    from: 'noreply@test.com',
     subject: 'Test Subject',
+    timeoutMs: 5000,
   };
 
   beforeEach(async () => {
     mockSendMail = jest.fn();
-    mockVerify = jest.fn();
-
-    (createTransport as jest.Mock).mockReturnValue({
-      sendMail: mockSendMail,
-      verify: mockVerify,
-    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailChannel,
+        {
+          provide: MailerService,
+          useValue: {
+            sendMail: mockSendMail,
+          },
+        },
         {
           provide: EmailChannelConfig,
           useValue: mockConfig,
@@ -50,7 +43,6 @@ describe('EmailChannel', () => {
   it('should be successfully initialized', () => {
     expect(channel).toBeDefined();
     expect(channel.type).toBe(Provider.EMAIL);
-    expect(createTransport).toHaveBeenCalledWith(mockConfig.transport);
   });
 
   it('should support EMAIL contact type', () => {
@@ -79,7 +71,7 @@ describe('EmailChannel', () => {
 
     expect(mockSendMail).toHaveBeenCalledTimes(1);
     expect(mockSendMail).toHaveBeenCalledWith({
-      from: mockConfig.fromEmail,
+      from: mockConfig.from,
       to: contact.value,
       subject: mockConfig.subject,
       text: message,
