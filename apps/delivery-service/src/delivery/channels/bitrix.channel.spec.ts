@@ -55,6 +55,10 @@ describe('BitrixChannel', () => {
     channel = module.get<BitrixChannel>(BitrixChannel);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be successfully initialized', () => {
     expect(channel).toBeDefined();
     expect(channel.type).toBe(Provider.BITRIX);
@@ -62,7 +66,6 @@ describe('BitrixChannel', () => {
 
   it('should support BITRIX contact type', () => {
     const validContact: Contact = { type: Provider.BITRIX, value: '14253' };
-
     expect(channel.isSupports(validContact)).toBe(true);
   });
 
