@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { from, firstValueFrom, timeout } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
-import { Channel } from '../abstracts/channel.abstract';
+import { Channel } from '../types/channel.abstract';
 import { EmailChannelConfig } from './email.channel.config';
 
 @Injectable()

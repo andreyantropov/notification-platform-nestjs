@@ -1,5 +1,5 @@
 import { getAttempts } from './get-attempts.util';
-import { Channel } from '../../abstracts/channel.abstract';
+import { Channel } from '../../types/channel.abstract';
 import { Contact } from '@app/shared';
 import { Provider } from '@app/shared';
 

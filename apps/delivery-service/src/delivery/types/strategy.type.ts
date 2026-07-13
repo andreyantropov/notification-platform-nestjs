@@ -1,5 +1,5 @@
 import { Notification } from '@app/shared';
-import { Channel } from '../abstracts/channel.abstract';
+import { Channel } from './channel.abstract';
 
 export type Strategy = (
   notification: Notification,

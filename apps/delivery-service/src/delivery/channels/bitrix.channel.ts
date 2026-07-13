@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
-import { Channel } from '../abstracts/channel.abstract';
+import { Channel } from '../types/channel.abstract';
 import { BitrixChannelConfig } from './bitrix.channel.config';
 
 interface BitrixResponse {

@@ -1,6 +1,6 @@
 import { Contact } from '@app/shared';
-import { Channel } from '../../abstracts/channel.abstract';
-import { Attempt } from '../interfaces/attempt.interface';
+import { Channel } from '../../types/channel.abstract';
+import { Attempt } from '../types/attempt.interface';
 
 export const getAttempts = (
   contacts: readonly Contact[],

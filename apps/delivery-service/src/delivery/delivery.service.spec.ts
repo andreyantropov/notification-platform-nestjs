@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryService } from './delivery.service';
 import { StrategyFactory } from './strategies/strategy.factory';
-import { CHANNELS } from './tokens/channels.token';
-import { Channel } from './abstracts/channel.abstract';
+import { CHANNELS } from './types/channels.token';
+import { Channel } from './types/channel.abstract';
 import { Mode, Notification, Provider } from '@app/shared';
 
 describe('DeliveryService', () => {

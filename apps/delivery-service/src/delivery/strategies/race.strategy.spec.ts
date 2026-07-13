@@ -1,6 +1,6 @@
 import { raceStrategy } from './race.strategy';
 import { Notification } from '@app/shared';
-import { Channel } from '../abstracts/channel.abstract';
+import { Channel } from '../types/channel.abstract';
 import { Mode } from '@app/shared';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';

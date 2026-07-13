@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Channel } from './abstracts/channel.abstract';
+import { Channel } from './types/channel.abstract';
 import { Notification } from '@app/shared';
 import { StrategyFactory } from './strategies/strategy.factory';
-import { CHANNELS } from './tokens/channels.token';
+import { CHANNELS } from './types/channels.token';
 
 @Injectable()
 export class DeliveryService {
