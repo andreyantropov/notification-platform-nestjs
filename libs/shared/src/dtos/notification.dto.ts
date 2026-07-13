@@ -14,32 +14,30 @@ import { Notification } from '../interfaces/notification.interface';
 
 export class NotificationDto implements Notification {
   @IsString()
-  @IsNotEmpty({ message: 'Идентификатор id обязателен' })
+  @IsNotEmpty()
   readonly id!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'correlationId обязателен для трейсинга' })
+  @IsNotEmpty()
   readonly correlationId!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'clientId обязателен для идентификации отправителя' })
+  @IsNotEmpty()
   readonly clientId!: string;
 
-  @IsISO8601({}, { message: 'createdAt должен быть валидной строкой ISO8601' })
+  @IsISO8601({})
   readonly createdAt!: string;
 
   @IsArray()
-  @ArrayMinSize(1, {
-    message: 'Должен быть указан минимум один контакт для отправки',
-  })
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => ContactDto)
   readonly contacts!: ContactDto[];
 
   @IsString()
-  @IsNotEmpty({ message: 'Текст сообщения не должен быть пустым' })
+  @IsNotEmpty()
   readonly message!: string;
 
-  @IsEnum(Mode, { message: 'Указан некорректный режим отправки mode' })
+  @IsEnum(Mode)
   readonly mode!: Mode;
 }
