@@ -1,11 +1,11 @@
-import { broadcastStrategy } from './broadcast.strategy';
+import { broadcast } from './broadcast.strategy';
 import { Notification } from '@app/shared';
 import { Channel } from '../types/channel.abstract';
 import { Mode } from '@app/shared';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
 
-describe('BroadcastStrategy', () => {
+describe('broadcast', () => {
   class TestEmailChannel extends Channel {
     protected readonly type = Provider.EMAIL;
 
@@ -68,7 +68,7 @@ describe('BroadcastStrategy', () => {
     emailSendSpy.mockResolvedValue(undefined);
     bitrixSendSpy.mockResolvedValue(undefined);
 
-    await broadcastStrategy(mockNotification, channels);
+    await broadcast(mockNotification, channels);
 
     expect(emailSendSpy).toHaveBeenCalledTimes(1);
     expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
@@ -87,7 +87,7 @@ describe('BroadcastStrategy', () => {
     emailSendSpy.mockResolvedValue(undefined);
     bitrixSendSpy.mockRejectedValue(new Error('Bitrix API Timeout'));
 
-    await expect(broadcastStrategy(mockNotification, channels)).rejects.toThrow(
+    await expect(broadcast(mockNotification, channels)).rejects.toThrow(
       'Один или несколько каналов вернули ошибку во время массовой отправки',
     );
 

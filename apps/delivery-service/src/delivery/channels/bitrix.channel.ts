@@ -55,4 +55,16 @@ export class BitrixChannel extends Channel {
       });
     }
   }
+
+  async checkHealth(): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/user.current.json`),
+      );
+    } catch (error) {
+      throw new Error(`Bitrix API недоступен`, {
+        cause: error,
+      });
+    }
+  }
 }

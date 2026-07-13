@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Strategy } from '../types/strategy.type';
-import { sequentialStrategy } from './sequential.strategy';
-import { broadcastStrategy } from './broadcast.strategy';
-import { raceStrategy } from './race.strategy';
+import { sequential } from './sequential.strategy';
+import { broadcast } from './broadcast.strategy';
+import { race } from './race.strategy';
 import { Mode } from '@app/shared';
 
 @Injectable()
 export class StrategyFactory {
   private readonly strategies: Record<Mode, Strategy> = {
-    [Mode.SEQUENTIAL]: sequentialStrategy,
-    [Mode.BROADCAST]: broadcastStrategy,
-    [Mode.RACE]: raceStrategy,
+    [Mode.SEQUENTIAL]: sequential,
+    [Mode.BROADCAST]: broadcast,
+    [Mode.RACE]: race,
   };
 
   get(mode: Mode): Strategy {

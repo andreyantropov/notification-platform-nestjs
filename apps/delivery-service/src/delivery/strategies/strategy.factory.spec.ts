@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StrategyFactory } from './strategy.factory';
-import { sequentialStrategy } from './sequential.strategy';
-import { broadcastStrategy } from './broadcast.strategy';
-import { raceStrategy } from './race.strategy';
+import { sequential } from './sequential.strategy';
+import { broadcast } from './broadcast.strategy';
+import { race } from './race.strategy';
 import { Mode } from '@app/shared';
 
 describe('StrategyFactory', () => {
@@ -20,19 +20,19 @@ describe('StrategyFactory', () => {
     expect(factory).toBeDefined();
   });
 
-  it('should return sequentialStrategy for SEQUENTIAL mode', () => {
+  it('should return sequential for SEQUENTIAL mode', () => {
     const strategy = factory.get(Mode.SEQUENTIAL);
-    expect(strategy).toBe(sequentialStrategy);
+    expect(strategy).toBe(sequential);
   });
 
-  it('should return broadcastStrategy for BROADCAST mode', () => {
+  it('should return broadcast for BROADCAST mode', () => {
     const strategy = factory.get(Mode.BROADCAST);
-    expect(strategy).toBe(broadcastStrategy);
+    expect(strategy).toBe(broadcast);
   });
 
-  it('should return raceStrategy for RACE mode', () => {
+  it('should return race for RACE mode', () => {
     const strategy = factory.get(Mode.RACE);
-    expect(strategy).toBe(raceStrategy);
+    expect(strategy).toBe(race);
   });
 
   it('should throw an error if an unhandled mode is passed', () => {

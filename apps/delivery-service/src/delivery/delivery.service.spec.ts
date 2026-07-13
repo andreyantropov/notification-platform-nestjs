@@ -57,34 +57,38 @@ describe('DeliveryService', () => {
     service = module.get<DeliveryService>(DeliveryService);
   });
 
-  it('should be successfully initialized', () => {
-    expect(service).toBeDefined();
+  describe('constructor', () => {
+    it('should be successfully initialized and injected with dependencies', () => {
+      expect(service).toBeDefined();
+    });
   });
 
-  it('should successfully fetch strategy from factory and execute it with channels', async () => {
-    mockStrategy.mockResolvedValue(undefined);
+  describe('deliver', () => {
+    it('should successfully fetch strategy from factory and execute it with channels list', async () => {
+      mockStrategy.mockResolvedValue(undefined);
 
-    await expect(service.deliver(mockNotification)).resolves.not.toThrow();
+      await expect(service.deliver(mockNotification)).resolves.not.toThrow();
 
-    expect(mockGetStrategy).toHaveBeenCalledTimes(1);
-    expect(mockGetStrategy).toHaveBeenCalledWith(mockNotification.mode);
+      expect(mockGetStrategy).toHaveBeenCalledTimes(1);
+      expect(mockGetStrategy).toHaveBeenCalledWith(mockNotification.mode);
 
-    expect(mockStrategy).toHaveBeenCalledTimes(1);
-    expect(mockStrategy).toHaveBeenCalledWith(
-      mockNotification,
-      mockChannelsList,
-    );
-  });
+      expect(mockStrategy).toHaveBeenCalledTimes(1);
+      expect(mockStrategy).toHaveBeenCalledWith(
+        mockNotification,
+        mockChannelsList,
+      );
+    });
 
-  it('should propagate errors if the executed strategy throws an exception', async () => {
-    const strategyError = new Error('Strategy execution failed');
-    mockStrategy.mockRejectedValue(strategyError);
+    it('should properly propagate errors upward if the executed strategy throws an exception', async () => {
+      const strategyError = new Error('Strategy execution failed');
+      mockStrategy.mockRejectedValue(strategyError);
 
-    await expect(service.deliver(mockNotification)).rejects.toThrow(
-      'Strategy execution failed',
-    );
+      await expect(service.deliver(mockNotification)).rejects.toThrow(
+        'Strategy execution failed',
+      );
 
-    expect(mockGetStrategy).toHaveBeenCalledTimes(1);
-    expect(mockStrategy).toHaveBeenCalledTimes(1);
+      expect(mockGetStrategy).toHaveBeenCalledTimes(1);
+      expect(mockStrategy).toHaveBeenCalledTimes(1);
+    });
   });
 });

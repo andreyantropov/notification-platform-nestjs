@@ -9,5 +9,7 @@ export abstract class Channel {
 
   abstract send(contact: Contact, message: string): Promise<void>;
 
-  checkHealth?(): Promise<void>;
+  async checkHealth(): Promise<void> {
+    return Promise.resolve();
+  }
 }

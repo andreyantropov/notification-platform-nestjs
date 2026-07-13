@@ -1,11 +1,11 @@
-import { sequentialStrategy } from './sequential.strategy';
+import { sequential } from './sequential.strategy';
 import { Notification } from '@app/shared';
 import { Channel } from '../types/channel.abstract';
 import { Mode } from '@app/shared';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
 
-describe('SequentialStrategy', () => {
+describe('equential', () => {
   class TestEmailChannel extends Channel {
     protected readonly type = Provider.EMAIL;
 
@@ -67,7 +67,7 @@ describe('SequentialStrategy', () => {
   it('should stop and return after the first successful delivery', async () => {
     emailSendSpy.mockResolvedValue(undefined);
 
-    await sequentialStrategy(mockNotification, channels);
+    await sequential(mockNotification, channels);
 
     expect(emailSendSpy).toHaveBeenCalledTimes(1);
     expect(bitrixSendSpy).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe('SequentialStrategy', () => {
     emailSendSpy.mockRejectedValue(new Error('SMTP Gateway Error'));
     bitrixSendSpy.mockResolvedValue(undefined);
 
-    await sequentialStrategy(mockNotification, channels);
+    await sequential(mockNotification, channels);
 
     expect(emailSendSpy).toHaveBeenCalledTimes(1);
     expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
@@ -97,9 +97,7 @@ describe('SequentialStrategy', () => {
     emailSendSpy.mockRejectedValue(new Error('SMTP Error'));
     bitrixSendSpy.mockRejectedValue(new Error('Bitrix Error'));
 
-    await expect(
-      sequentialStrategy(mockNotification, channels),
-    ).rejects.toThrow(
+    await expect(sequential(mockNotification, channels)).rejects.toThrow(
       'Все попытки отправки уведомления (2 шт.) завершились неудачей',
     );
 

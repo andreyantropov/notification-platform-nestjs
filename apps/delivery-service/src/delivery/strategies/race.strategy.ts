@@ -3,7 +3,7 @@ import { Notification } from '@app/shared';
 import { Strategy } from '../types/strategy.type';
 import { getAttempts } from './utils/get-attempts.util';
 
-export const raceStrategy: Strategy = async (
+export const race: Strategy = async (
   notification: Notification,
   channels: readonly Channel[],
 ): Promise<void> => {

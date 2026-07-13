@@ -1,11 +1,11 @@
-import { raceStrategy } from './race.strategy';
+import { race } from './race.strategy';
 import { Notification } from '@app/shared';
 import { Channel } from '../types/channel.abstract';
 import { Mode } from '@app/shared';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
 
-describe('RaceStrategy', () => {
+describe('race', () => {
   class TestEmailChannel extends Channel {
     protected readonly type = Provider.EMAIL;
 
@@ -68,9 +68,7 @@ describe('RaceStrategy', () => {
     emailSendSpy.mockRejectedValue(new Error('SMTP Gateway Error'));
     bitrixSendSpy.mockResolvedValue(undefined);
 
-    await expect(
-      raceStrategy(mockNotification, channels),
-    ).resolves.not.toThrow();
+    await expect(race(mockNotification, channels)).resolves.not.toThrow();
 
     expect(emailSendSpy).toHaveBeenCalledTimes(1);
     expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
@@ -89,7 +87,7 @@ describe('RaceStrategy', () => {
     emailSendSpy.mockRejectedValue(new Error('SMTP Fatal Error'));
     bitrixSendSpy.mockRejectedValue(new Error('Bitrix REST Error'));
 
-    await expect(raceStrategy(mockNotification, channels)).rejects.toThrow(
+    await expect(race(mockNotification, channels)).rejects.toThrow(
       'Все попытки отправки уведомления (2 шт.) завершились неудачей',
     );
 

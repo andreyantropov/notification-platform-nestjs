@@ -59,59 +59,82 @@ describe('BitrixChannel', () => {
     jest.clearAllMocks();
   });
 
-  it('should be successfully initialized', () => {
-    expect(channel).toBeDefined();
-    expect(channel.type).toBe(Provider.BITRIX);
-  });
-
-  it('should support BITRIX contact type', () => {
-    const validContact: Contact = { type: Provider.BITRIX, value: '14253' };
-    expect(channel.isSupports(validContact)).toBe(true);
-  });
-
-  it('should not support EMAIL contact type', () => {
-    const invalidContact: Contact = {
-      type: Provider.EMAIL,
-      value: 'test@test.com',
-    };
-    expect(channel.isSupports(invalidContact)).toBe(false);
-  });
-
-  it('should successfully send notification when Bitrix returns result', async () => {
-    const contact: Contact = { type: Provider.BITRIX, value: '14253' };
-    const message = 'Test Bitrix payload';
-
-    const axiosResponse = createAxiosResponse({ result: 42 });
-    mockHttpPost.mockReturnValue(of(axiosResponse));
-
-    await expect(channel.send(contact, message)).resolves.not.toThrow();
-    expect(mockHttpPost).toHaveBeenCalledTimes(1);
-  });
-
-  it('should throw an error when Bitrix returns an explicit API error', async () => {
-    const contact: Contact = { type: Provider.BITRIX, value: '14253' };
-    const message = 'Test Bitrix payload';
-
-    const axiosResponse = createAxiosResponse({
-      error: 'INVALID_CREDENTIALS',
-      error_description: 'Invalid request credentials',
+  describe('constructor', () => {
+    it('should be successfully initialized with correct provider type', () => {
+      expect(channel).toBeDefined();
+      expect(channel.type).toBe(Provider.BITRIX);
     });
-    mockHttpPost.mockReturnValue(of(axiosResponse));
-
-    await expect(channel.send(contact, message)).rejects.toThrow(
-      'Не удалось отправить уведомление через Bitrix',
-    );
   });
 
-  it('should throw an error when network request completely fails', async () => {
+  describe('isSupports', () => {
+    it('should return true if contact type matches BITRIX provider', () => {
+      const validContact: Contact = { type: Provider.BITRIX, value: '14253' };
+      expect(channel.isSupports(validContact)).toBe(true);
+    });
+
+    it('should return false if contact type does not match BITRIX provider', () => {
+      const invalidContact: Contact = {
+        type: Provider.EMAIL,
+        value: 'test@test.com',
+      };
+      expect(channel.isSupports(invalidContact)).toBe(false);
+    });
+  });
+
+  describe('send', () => {
     const contact: Contact = { type: Provider.BITRIX, value: '14253' };
     const message = 'Test Bitrix payload';
 
-    const networkError = new Error('Gateway Timeout');
-    mockHttpPost.mockReturnValue(throwError(() => networkError));
+    it('should successfully send notification when Bitrix API returns valid result', async () => {
+      const axiosResponse = createAxiosResponse({ result: 42 });
+      mockHttpPost.mockReturnValue(of(axiosResponse));
 
-    await expect(channel.send(contact, message)).rejects.toThrow(
-      'Не удалось отправить уведомление через Bitrix',
-    );
+      await expect(channel.send(contact, message)).resolves.not.toThrow();
+      expect(mockHttpPost).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw an error when Bitrix API returns an explicit error payload', async () => {
+      const axiosResponse = createAxiosResponse({
+        error: 'INVALID_CREDENTIALS',
+        error_description: 'Invalid request credentials',
+      });
+      mockHttpPost.mockReturnValue(of(axiosResponse));
+
+      await expect(channel.send(contact, message)).rejects.toThrow(
+        'Не удалось отправить уведомление через Bitrix',
+      );
+    });
+
+    it('should throw an error when HTTP network request completely fails', async () => {
+      const networkError = new Error('Gateway Timeout');
+      mockHttpPost.mockReturnValue(throwError(() => networkError));
+
+      await expect(channel.send(contact, message)).rejects.toThrow(
+        'Не удалось отправить уведомление через Bitrix',
+      );
+    });
+  });
+
+  describe('checkHealth', () => {
+    it('should successfully pass health check when Bitrix API responds with HTTP 200', async () => {
+      const axiosResponse = createAxiosResponse({ result: { id: 1 } });
+      mockHttpPost.mockReturnValue(of(axiosResponse));
+
+      await expect(channel.checkHealth()).resolves.not.toThrow();
+      expect(mockHttpPost).toHaveBeenCalledTimes(1);
+      expect(mockHttpPost).toHaveBeenCalledWith(
+        `${mockConfig.url}/rest/${mockConfig.userId}/${mockConfig.authToken}/user.current.json`,
+      );
+    });
+
+    it('should throw an error during health check if Bitrix API endpoint is unreachable', async () => {
+      const networkError = new Error('Connection refused');
+      mockHttpPost.mockReturnValue(throwError(() => networkError));
+
+      await expect(channel.checkHealth()).rejects.toThrow(
+        'Bitrix API недоступен',
+      );
+      expect(mockHttpPost).toHaveBeenCalledTimes(1);
+    });
   });
 });

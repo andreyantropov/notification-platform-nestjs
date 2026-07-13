@@ -42,4 +42,12 @@ export class EmailChannel extends Channel {
       });
     }
   }
+
+  async checkHealth(): Promise<void> {
+    try {
+      await this.mailerService.getTransporter().verify();
+    } catch {
+      throw new Error(`SMTP сервер недоступен`);
+    }
+  }
 }
