@@ -86,6 +86,6 @@ const isDev = process.env.NODE_ENV === 'development';
       ],
     },
   ],
-  exports: [BitrixChannel, EmailChannel],
+  exports: [BitrixChannel, EmailChannel, CHANNELS],
 })
 export class DeliveryModule {}
