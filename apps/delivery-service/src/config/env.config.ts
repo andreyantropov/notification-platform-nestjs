@@ -30,6 +30,11 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   RABBITMQ_URL!: string;
 
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  PORT = 3000;
+
   @IsUrl({})
   @IsNotEmpty()
   BITRIX_BASE_URL!: string;
