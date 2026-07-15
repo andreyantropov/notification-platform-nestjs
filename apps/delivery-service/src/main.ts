@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { getRmqOptions } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,24 +10,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  const rabbitmqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
-  const httpPort = configService.get<number>('PORT')!;
-
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [rabbitmqUrl],
-      queue: 'notifications',
-      noAck: false,
-      prefetchCount: 1,
-      queueOptions: {
-        durable: true,
-      },
-    },
-  });
-
+  app.connectMicroservice(getRmqOptions(configService));
   await app.startAllMicroservices();
 
+  const httpPort = configService.get<number>('PORT')!;
   await app.listen(httpPort);
 }
 

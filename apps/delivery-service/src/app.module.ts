@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { validateEnv } from './config/env.validate';
+import { validate } from './config';
 import { DeliveryModule } from './delivery/delivery.module';
 import { HealthModule } from './health/health.module';
 
@@ -8,7 +8,7 @@ import { HealthModule } from './health/health.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: validateEnv,
+      validate,
     }),
     DeliveryModule,
     HealthModule,
