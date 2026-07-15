@@ -1,30 +1,14 @@
-import { sequential } from './sequential.strategy';
-import { Notification } from '@app/shared';
-import { Channel } from '../types/channel.abstract';
-import { Mode } from '@app/shared';
-import { Provider } from '@app/shared';
-import { Contact } from '@app/shared';
+import { SequentialStrategy } from './sequential.strategy';
+import { Notification, Mode, Provider, Contact } from '@app/shared';
+import { Channel } from '../channels/channel.abstract';
 
-describe('equential', () => {
-  class TestEmailChannel extends Channel {
-    protected readonly type = Provider.EMAIL;
+describe('SequentialStrategy', () => {
+  let strategy: SequentialStrategy;
 
+  class MockChannel extends Channel {
     constructor(
-      private readonly sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
-    ) {
-      super();
-    }
-
-    async send(contact: Contact, message: string): Promise<void> {
-      return this.sendSpy(contact, message);
-    }
-  }
-
-  class TestBitrixChannel extends Channel {
-    protected readonly type = Provider.BITRIX;
-
-    constructor(
-      private readonly sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
+      public readonly type: Provider,
+      public sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
     ) {
       super();
     }
@@ -47,61 +31,64 @@ describe('equential', () => {
     ],
   };
 
-  let emailSendSpy: jest.Mock<Promise<void>, [Contact, string]>;
-  let bitrixSendSpy: jest.Mock<Promise<void>, [Contact, string]>;
-
-  let mockEmailChannel: Channel;
-  let mockBitrixChannel: Channel;
-  let channels: readonly Channel[];
+  let emailChannel: MockChannel;
+  let bitrixChannel: MockChannel;
+  let channels: Channel[];
 
   beforeEach(() => {
-    emailSendSpy = jest.fn<Promise<void>, [Contact, string]>();
-    bitrixSendSpy = jest.fn<Promise<void>, [Contact, string]>();
+    strategy = new SequentialStrategy();
 
-    mockEmailChannel = new TestEmailChannel(emailSendSpy);
-    mockBitrixChannel = new TestBitrixChannel(bitrixSendSpy);
+    const emailSpy = jest.fn<Promise<void>, [Contact, string]>();
+    const bitrixSpy = jest.fn<Promise<void>, [Contact, string]>();
 
-    channels = [mockEmailChannel, mockBitrixChannel];
+    emailChannel = new MockChannel(Provider.EMAIL, emailSpy);
+    bitrixChannel = new MockChannel(Provider.BITRIX, bitrixSpy);
+
+    channels = [emailChannel, bitrixChannel];
   });
 
-  it('should stop and return after the first successful delivery', async () => {
-    emailSendSpy.mockResolvedValue(undefined);
+  describe('execute', () => {
+    it('should stop and return after the first successful delivery', async () => {
+      emailChannel.sendSpy.mockResolvedValue(undefined);
 
-    await sequential(mockNotification, channels);
+      await strategy.execute(mockNotification, channels);
 
-    expect(emailSendSpy).toHaveBeenCalledTimes(1);
-    expect(bitrixSendSpy).not.toHaveBeenCalled();
+      expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
+      expect(bitrixChannel.sendSpy).not.toHaveBeenCalled();
 
-    expect(emailSendSpy).toHaveBeenCalledWith(
-      mockNotification.contacts[0],
-      mockNotification.message,
-    );
-  });
+      expect(emailChannel.sendSpy).toHaveBeenCalledWith(
+        mockNotification.contacts[0],
+        mockNotification.message,
+      );
+    });
 
-  it('should try the next channel if the previous one fails', async () => {
-    emailSendSpy.mockRejectedValue(new Error('SMTP Gateway Error'));
-    bitrixSendSpy.mockResolvedValue(undefined);
+    it('should try the next channel if the previous one fails', async () => {
+      emailChannel.sendSpy.mockRejectedValue(new Error('SMTP Gateway Error'));
+      bitrixChannel.sendSpy.mockResolvedValue(undefined);
 
-    await sequential(mockNotification, channels);
+      await strategy.execute(mockNotification, channels);
 
-    expect(emailSendSpy).toHaveBeenCalledTimes(1);
-    expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
+      expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
+      expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);
 
-    expect(bitrixSendSpy).toHaveBeenCalledWith(
-      mockNotification.contacts[1],
-      mockNotification.message,
-    );
-  });
+      expect(bitrixChannel.sendSpy).toHaveBeenCalledWith(
+        mockNotification.contacts[1],
+        mockNotification.message,
+      );
+    });
 
-  it('should throw an error with attempt count if all channels fail', async () => {
-    emailSendSpy.mockRejectedValue(new Error('SMTP Error'));
-    bitrixSendSpy.mockRejectedValue(new Error('Bitrix Error'));
+    it('should throw an error with attempt count if all channels fail', async () => {
+      emailChannel.sendSpy.mockRejectedValue(new Error('SMTP Error'));
+      bitrixChannel.sendSpy.mockRejectedValue(new Error('Bitrix Error'));
 
-    await expect(sequential(mockNotification, channels)).rejects.toThrow(
-      'Все попытки отправки уведомления (2 шт.) завершились неудачей',
-    );
+      await expect(
+        strategy.execute(mockNotification, channels),
+      ).rejects.toThrow(
+        'Все попытки отправки уведомления (2 шт.) завершились неудачей',
+      );
 
-    expect(emailSendSpy).toHaveBeenCalledTimes(1);
-    expect(bitrixSendSpy).toHaveBeenCalledTimes(1);
+      expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
+      expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Channel } from '../types/channel.abstract';
+import { Channel } from './channel.abstract';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
 

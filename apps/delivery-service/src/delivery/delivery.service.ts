@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Channel } from './types/channel.abstract';
+import { Channel } from './channels/channel.abstract';
 import { Notification } from '@app/shared';
 import { StrategyFactory } from './strategies/strategy.factory';
-import { CHANNELS } from './types/channels.token';
+import { CHANNELS } from './delivery.constants';
 
 @Injectable()
 export class DeliveryService {
@@ -12,9 +12,8 @@ export class DeliveryService {
   ) {}
 
   async deliver(notification: Notification): Promise<void> {
-    await this.strategyFactory.get(notification.mode)(
-      notification,
-      this.channels,
-    );
+    await this.strategyFactory
+      .get(notification.mode)
+      .execute(notification, this.channels);
   }
 }

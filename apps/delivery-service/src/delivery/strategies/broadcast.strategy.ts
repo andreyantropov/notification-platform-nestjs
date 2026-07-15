@@ -1,22 +1,25 @@
-import { Channel } from '../types/channel.abstract';
+import { Channel } from '../channels/channel.abstract';
 import { Notification } from '@app/shared';
-import { Strategy } from '../types/strategy.type';
-import { getAttempts } from './utils/get-attempts.util';
+import { Strategy } from './strategy.abstract';
+import { Injectable } from '@nestjs/common';
 
-export const broadcast: Strategy = async (
-  notification: Notification,
-  channels: readonly Channel[],
-): Promise<void> => {
-  const { contacts, message } = notification;
-  const attempts = getAttempts(contacts, channels);
+@Injectable()
+export class BroadcastStrategy extends Strategy {
+  async execute(
+    notification: Notification,
+    channels: readonly Channel[],
+  ): Promise<void> {
+    const { contacts, message } = notification;
+    const attempts = this.getAttempts(channels, contacts);
 
-  try {
-    await Promise.all(
-      attempts.map(({ channel, contact }) => channel.send(contact, message)),
-    );
-  } catch {
-    throw new Error(
-      `Один или несколько каналов вернули ошибку во время массовой отправки`,
-    );
+    try {
+      await Promise.all(
+        attempts.map(({ channel, contact }) => channel.send(contact, message)),
+      );
+    } catch {
+      throw new Error(
+        `Один или несколько каналов вернули ошибку во время массовой отправки`,
+      );
+    }
   }
-};
+}

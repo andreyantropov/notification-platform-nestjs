@@ -6,12 +6,15 @@ import { BitrixChannel } from './channels/bitrix.channel';
 import { EmailChannel } from './channels/email.channel';
 import { MockBitrixChannel } from './channels/mock-bitrix.channel';
 import { MockEmailChannel } from './channels/mock-email.channel';
-import { DeliveryController } from './delivery.controller';
-import { DeliveryService } from './delivery.service';
-import { StrategyFactory } from './strategies/strategy.factory';
-import { CHANNELS } from './types/channels.token';
 import { BitrixChannelConfig } from './channels/bitrix.channel.config';
 import { EmailChannelConfig } from './channels/email.channel.config';
+import { StrategyFactory } from './strategies/strategy.factory';
+import { BroadcastStrategy } from './strategies/broadcast.strategy';
+import { RaceStrategy } from './strategies/race.strategy';
+import { SequentialStrategy } from './strategies/sequential.strategy';
+import { DeliveryController } from './delivery.controller';
+import { DeliveryService } from './delivery.service';
+import { CHANNELS } from './delivery.constants';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -48,14 +51,9 @@ const isDev = process.env.NODE_ENV === 'development';
   providers: [
     DeliveryService,
     StrategyFactory,
-    {
-      provide: BitrixChannel,
-      useClass: isDev ? MockBitrixChannel : BitrixChannel,
-    },
-    {
-      provide: EmailChannel,
-      useClass: isDev ? MockEmailChannel : EmailChannel,
-    },
+    BroadcastStrategy,
+    RaceStrategy,
+    SequentialStrategy,
     {
       provide: BitrixChannelConfig,
       inject: [ConfigService],
@@ -78,6 +76,14 @@ const isDev = process.env.NODE_ENV === 'development';
         ),
     },
     {
+      provide: BitrixChannel,
+      useClass: isDev ? MockBitrixChannel : BitrixChannel,
+    },
+    {
+      provide: EmailChannel,
+      useClass: isDev ? MockEmailChannel : EmailChannel,
+    },
+    {
       provide: CHANNELS,
       inject: [BitrixChannel, EmailChannel],
       useFactory: (bitrix: BitrixChannel, email: EmailChannel) => [
@@ -86,6 +92,6 @@ const isDev = process.env.NODE_ENV === 'development';
       ],
     },
   ],
-  exports: [BitrixChannel, EmailChannel, CHANNELS],
+  exports: [],
 })
 export class DeliveryModule {}

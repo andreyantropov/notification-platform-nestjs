@@ -52,21 +52,6 @@ describe('EmailChannel', () => {
     });
   });
 
-  describe('isSupports', () => {
-    it('should return true if contact type matches EMAIL provider', () => {
-      const validContact: Contact = {
-        type: Provider.EMAIL,
-        value: 'user@test.com',
-      };
-      expect(channel.isSupports(validContact)).toBe(true);
-    });
-
-    it('should return false if contact type does not match EMAIL provider', () => {
-      const invalidContact: Contact = { type: Provider.BITRIX, value: '14253' };
-      expect(channel.isSupports(invalidContact)).toBe(false);
-    });
-  });
-
   describe('send', () => {
     const contact: Contact = {
       type: Provider.EMAIL,

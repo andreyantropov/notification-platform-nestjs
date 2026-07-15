@@ -1,22 +1,25 @@
-import { Channel } from '../types/channel.abstract';
+import { Injectable } from '@nestjs/common';
+import { Channel } from '../channels/channel.abstract';
 import { Notification } from '@app/shared';
-import { Strategy } from '../types/strategy.type';
-import { getAttempts } from './utils/get-attempts.util';
+import { Strategy } from './strategy.abstract';
 
-export const race: Strategy = async (
-  notification: Notification,
-  channels: readonly Channel[],
-): Promise<void> => {
-  const { contacts, message } = notification;
-  const attempts = getAttempts(contacts, channels);
+@Injectable()
+export class RaceStrategy extends Strategy {
+  async execute(
+    notification: Notification,
+    channels: readonly Channel[],
+  ): Promise<void> {
+    const { contacts, message } = notification;
+    const attempts = this.getAttempts(channels, contacts);
 
-  try {
-    await Promise.any(
-      attempts.map(({ channel, contact }) => channel.send(contact, message)),
-    );
-  } catch {
-    throw new Error(
-      `Все попытки отправки уведомления (${attempts.length} шт.) завершились неудачей`,
-    );
+    try {
+      await Promise.any(
+        attempts.map(({ channel, contact }) => channel.send(contact, message)),
+      );
+    } catch {
+      throw new Error(
+        `Все попытки отправки уведомления (${attempts.length} шт.) завершились неудачей`,
+      );
+    }
   }
-};
+}

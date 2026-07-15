@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { ChannelsIndicator } from './channels.indicator';
 import { CHANNELS } from '../../delivery/types/channels.token';
-import { Channel } from '../../delivery/types/channel.abstract';
+import { Channel } from '../../delivery/channels/channel.abstract';
 import { Provider } from '@app/shared';
 
 describe('ChannelsIndicator', () => {
