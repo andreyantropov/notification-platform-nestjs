@@ -1,2 +1,2 @@
-export * from './channels/channel.abstract';
-export * from './types/channels.token';
+export * from './delivery.module';
+export * from './indicators/delivery.indicator';

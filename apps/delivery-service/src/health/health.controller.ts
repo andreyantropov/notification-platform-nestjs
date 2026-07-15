@@ -1,14 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { ChannelsIndicator } from './indicators/channels.indicator';
+import { DeliveryIndicator } from '../delivery';
 
 @ApiExcludeController()
 @Controller('health')
 export class HealthController {
   constructor(
     private readonly healthCheckService: HealthCheckService,
-    private readonly channelsIndicator: ChannelsIndicator,
+    private readonly deliveryIndicator: DeliveryIndicator,
   ) {}
 
   @Get('live')
@@ -23,7 +23,7 @@ export class HealthController {
   @HealthCheck()
   async readiness() {
     return this.healthCheckService.check([
-      () => this.channelsIndicator.checkChannels('gateways'),
+      () => this.deliveryIndicator.isHealthy('delivery-service'),
     ]);
   }
 }

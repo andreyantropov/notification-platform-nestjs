@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { ChannelsIndicator } from './indicators/channels.indicator';
+import { DeliveryIndicator } from '../delivery';
 
 describe('HealthController', () => {
   let controller: HealthController;
 
   let mockCheck: jest.Mock<Promise<HealthCheckResult>, [unknown[]]>;
-  let mockCheckChannels: jest.Mock<Promise<Record<string, unknown>>, [string]>;
+  let mockisHealthy: jest.Mock<Promise<Record<string, unknown>>, [string]>;
 
   const mockHealthyResult: HealthCheckResult = {
     status: 'ok',
@@ -18,7 +18,7 @@ describe('HealthController', () => {
 
   beforeEach(async () => {
     mockCheck = jest.fn<Promise<HealthCheckResult>, [unknown[]]>();
-    mockCheckChannels = jest.fn<Promise<Record<string, unknown>>, [string]>();
+    mockisHealthy = jest.fn<Promise<Record<string, unknown>>, [string]>();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
@@ -30,9 +30,9 @@ describe('HealthController', () => {
           },
         },
         {
-          provide: ChannelsIndicator,
+          provide: DeliveryIndicator,
           useValue: {
-            checkChannels: mockCheckChannels,
+            isHealthy: mockisHealthy,
           },
         },
       ],
@@ -72,7 +72,7 @@ describe('HealthController', () => {
   describe('readiness', () => {
     it('should successfully execute readiness probe by delegating check to channels indicator', async () => {
       mockCheck.mockResolvedValue(mockHealthyResult);
-      mockCheckChannels.mockResolvedValue({ gateways: { status: 'up' } });
+      mockisHealthy.mockResolvedValue({ gateways: { status: 'up' } });
 
       const result = await controller.readiness();
 
@@ -84,8 +84,8 @@ describe('HealthController', () => {
       expect(typeof passedFunctions[0]).toBe('function');
 
       await (passedFunctions[0] as () => Promise<unknown>)();
-      expect(mockCheckChannels).toHaveBeenCalledTimes(1);
-      expect(mockCheckChannels).toHaveBeenCalledWith('gateways');
+      expect(mockisHealthy).toHaveBeenCalledTimes(1);
+      expect(mockisHealthy).toHaveBeenCalledWith('delivery-service');
     });
   });
 });

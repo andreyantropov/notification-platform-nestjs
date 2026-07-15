@@ -14,6 +14,7 @@ import { RaceStrategy } from './strategies/race.strategy';
 import { SequentialStrategy } from './strategies/sequential.strategy';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
+import { DeliveryIndicator } from './indicators/delivery.indicator';
 import { CHANNELS } from './delivery.constants';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -91,7 +92,8 @@ const isDev = process.env.NODE_ENV === 'development';
         email,
       ],
     },
+    DeliveryIndicator,
   ],
-  exports: [],
+  exports: [DeliveryIndicator],
 })
 export class DeliveryModule {}

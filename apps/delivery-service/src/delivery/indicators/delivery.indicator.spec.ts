@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
-import { ChannelsIndicator } from './channels.indicator';
-import { CHANNELS } from '../../delivery/types/channels.token';
-import { Channel } from '../../delivery/channels/channel.abstract';
+import { DeliveryIndicator } from './delivery.indicator';
+import { Channel } from '../channels/channel.abstract';
 import { Provider } from '@app/shared';
+import { CHANNELS } from '../delivery.constants';
 
-describe('ChannelsIndicator', () => {
-  let indicator: ChannelsIndicator;
+describe('DeliveryIndicator', () => {
+  let indicator: DeliveryIndicator;
   let mockUp: jest.Mock;
   let mockDown: jest.Mock;
 
@@ -53,7 +53,7 @@ describe('ChannelsIndicator', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ChannelsIndicator,
+        DeliveryIndicator,
         {
           provide: HealthIndicatorService,
           useValue: mockHealthIndicatorService,
@@ -65,7 +65,7 @@ describe('ChannelsIndicator', () => {
       ],
     }).compile();
 
-    indicator = module.get<ChannelsIndicator>(ChannelsIndicator);
+    indicator = module.get<DeliveryIndicator>(DeliveryIndicator);
   });
 
   afterEach(() => {
@@ -78,14 +78,14 @@ describe('ChannelsIndicator', () => {
     });
   });
 
-  describe('checkChannels', () => {
+  describe('isHealthy', () => {
     it('should return indicator.up() if all notification channels pass health check', async () => {
       mockUp.mockReturnValue({ gateways: { status: 'up' } });
 
       jest.spyOn(emailChannel, 'checkHealth').mockResolvedValue(undefined);
       jest.spyOn(bitrixChannel, 'checkHealth').mockResolvedValue(undefined);
 
-      const result = await indicator.checkChannels('gateways');
+      const result = await indicator.isHealthy('gateways');
 
       expect(result).toEqual({ gateways: { status: 'up' } });
       expect(mockUp).toHaveBeenCalledTimes(1);
@@ -105,7 +105,7 @@ describe('ChannelsIndicator', () => {
         .spyOn(bitrixChannel, 'checkHealth')
         .mockRejectedValue(new Error('Bitrix API Gateway Timeout'));
 
-      const result = await indicator.checkChannels('gateways');
+      const result = await indicator.isHealthy('gateways');
 
       expect(result).toEqual({
         gateways: {

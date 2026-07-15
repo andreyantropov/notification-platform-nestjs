@@ -3,17 +3,17 @@ import {
   HealthIndicatorService,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { Channel } from '../../delivery';
-import { CHANNELS } from '../../delivery';
+import { Channel } from '../channels/channel.abstract';
+import { CHANNELS } from '../delivery.constants';
 
 @Injectable()
-export class ChannelsIndicator {
+export class DeliveryIndicator {
   constructor(
     private readonly healthIndicatorService: HealthIndicatorService,
     @Inject(CHANNELS) private readonly channels: readonly Channel[],
   ) {}
 
-  async checkChannels(key: string): Promise<HealthIndicatorResult> {
+  async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const indicator = this.healthIndicatorService.check(key);
     const errors: string[] = [];
 
@@ -22,14 +22,12 @@ export class ChannelsIndicator {
         await channel.checkHealth();
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : 'Unknown error';
+          error instanceof Error ? error.message : 'Неизвестная ошибка';
         errors.push(`${channel.constructor.name}: ${message}`);
       }
     }
 
-    const isHealthy = errors.length === 0;
-
-    if (isHealthy) {
+    if (errors.length === 0) {
       return indicator.up();
     }
 
