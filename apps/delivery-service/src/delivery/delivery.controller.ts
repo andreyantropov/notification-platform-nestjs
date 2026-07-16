@@ -1,28 +1,18 @@
 import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
-import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
-import { Channel, Message } from 'amqplib';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { DeliveryService } from './delivery.service';
-import { NOTIFICATIONS } from '../app.constants';
-import { NotificationDto } from './dto/notification.dto';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
+import { SendNotificationCommandDto } from './dto/send-notification.command.dto';
 
 @Controller()
 export class DeliveryController {
   constructor(private readonly deliveryService: DeliveryService) {}
 
-  @EventPattern(NOTIFICATIONS)
+  @EventPattern(DELIVERY_NOTIFICATIONS_SEND_QUEUE)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async handleNotification(
-    @Payload() data: NotificationDto,
-    @Ctx() context: RmqContext,
+    @Payload() data: SendNotificationCommandDto,
   ): Promise<void> {
-    const channel = context.getChannelRef() as Channel;
-    const originalMsg = context.getMessage() as Message;
-    try {
-      await this.deliveryService.deliver(data);
-
-      channel.ack(originalMsg);
-    } catch {
-      channel.nack(originalMsg, false, true);
-    }
+    await this.deliveryService.deliver(data);
   }
 }

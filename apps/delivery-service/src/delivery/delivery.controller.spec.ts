@@ -1,21 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RmqContext } from '@nestjs/microservices';
-import { Channel, Message } from 'amqplib';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 import { Mode, Provider } from '@app/shared';
-import { NotificationDto } from './dto/notification.dto';
+import { SendNotificationCommandDto } from './dto/send-notification.command.dto';
 
 describe('DeliveryController', () => {
   let controller: DeliveryController;
-  let mockDeliver: jest.Mock<Promise<void>, [NotificationDto]>;
-  let mockAck: jest.Mock<void, [Message]>;
-  let mockNack: jest.Mock<void, [Message, boolean, boolean]>;
+  let mockDeliver: jest.Mock<Promise<void>, [SendNotificationCommandDto]>;
 
-  let mockContext: RmqContext;
-  let mockMessage: Message;
-
-  const mockNotificationDto: NotificationDto = {
+  const mockSendNotificationCommandDto: SendNotificationCommandDto = {
     id: 'notif-789',
     correlationId: 'corr-789',
     clientId: 'billing-service',
@@ -26,21 +19,7 @@ describe('DeliveryController', () => {
   };
 
   beforeEach(async () => {
-    mockDeliver = jest.fn<Promise<void>, [NotificationDto]>();
-    mockAck = jest.fn<void, [Message]>();
-    mockNack = jest.fn<void, [Message, boolean, boolean]>();
-
-    const mockChannelInstance = {
-      ack: mockAck,
-      nack: mockNack,
-    } as unknown as Channel;
-
-    mockMessage = {} as unknown as Message;
-
-    mockContext = {
-      getChannelRef: jest.fn().mockReturnValue(mockChannelInstance),
-      getMessage: jest.fn().mockReturnValue(mockMessage),
-    } as unknown as RmqContext;
+    mockDeliver = jest.fn<Promise<void>, [SendNotificationCommandDto]>();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeliveryController],
@@ -65,33 +44,25 @@ describe('DeliveryController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should successfully deliver notification and acknowledge the message in RabbitMQ', async () => {
+  it('should successfully deliver notification', async () => {
     mockDeliver.mockResolvedValue(undefined);
 
     await expect(
-      controller.handleNotification(mockNotificationDto, mockContext),
+      controller.handleNotification(mockSendNotificationCommandDto),
     ).resolves.not.toThrow();
 
     expect(mockDeliver).toHaveBeenCalledTimes(1);
-    expect(mockDeliver).toHaveBeenCalledWith(mockNotificationDto);
-
-    expect(mockAck).toHaveBeenCalledTimes(1);
-    expect(mockAck).toHaveBeenCalledWith(mockMessage);
-    expect(mockNack).not.toHaveBeenCalled();
+    expect(mockDeliver).toHaveBeenCalledWith(mockSendNotificationCommandDto);
   });
 
-  it('should negatively acknowledge the message and requeue it back if delivery service fails', async () => {
+  it('should throw an error if delivery service fails, allowing NestJS to auto-nack', async () => {
     const deliveryError = new Error('SMTP server connection lost');
     mockDeliver.mockRejectedValue(deliveryError);
 
     await expect(
-      controller.handleNotification(mockNotificationDto, mockContext),
-    ).resolves.not.toThrow();
+      controller.handleNotification(mockSendNotificationCommandDto),
+    ).rejects.toThrow('SMTP server connection lost');
 
     expect(mockDeliver).toHaveBeenCalledTimes(1);
-
-    expect(mockNack).toHaveBeenCalledTimes(1);
-    expect(mockNack).toHaveBeenCalledWith(mockMessage, false, true);
-    expect(mockAck).not.toHaveBeenCalled();
   });
 });

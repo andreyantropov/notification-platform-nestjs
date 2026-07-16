@@ -1,6 +1,6 @@
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { NOTIFICATIONS } from '../app.constants';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
 
 export const getRmqOptions = (
   configService: ConfigService,
@@ -8,7 +8,7 @@ export const getRmqOptions = (
   transport: Transport.RMQ,
   options: {
     urls: [configService.getOrThrow<string>('RABBITMQ_URL')],
-    queue: NOTIFICATIONS,
+    queue: DELIVERY_NOTIFICATIONS_SEND_QUEUE,
     noAck: false,
     prefetchCount: 1,
     queueOptions: {
