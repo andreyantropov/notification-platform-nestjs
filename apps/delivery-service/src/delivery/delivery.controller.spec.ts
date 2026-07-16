@@ -3,7 +3,8 @@ import { RmqContext } from '@nestjs/microservices';
 import { Channel, Message } from 'amqplib';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
-import { Mode, NotificationDto, Provider } from '@app/shared';
+import { Mode, Provider } from '@app/shared';
+import { NotificationDto } from './dto/notification.dto';
 
 describe('DeliveryController', () => {
   let controller: DeliveryController;

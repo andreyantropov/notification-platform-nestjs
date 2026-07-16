@@ -2,8 +2,8 @@ import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
 import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
 import { Channel, Message } from 'amqplib';
 import { DeliveryService } from './delivery.service';
-import { NotificationDto } from '@app/shared';
 import { NOTIFICATIONS } from '../app.constants';
+import { NotificationDto } from './dto/notification.dto';
 
 @Controller()
 export class DeliveryController {

@@ -8,9 +8,16 @@ import {
   ArrayMinSize,
   ValidateNested,
 } from 'class-validator';
-import { Mode } from '../enums/mode.enum';
-import { ContactDto } from './contact.dto';
-import { Notification } from '../interfaces/notification.interface';
+import { Notification, Mode, Contact, Provider } from '@app/shared';
+
+class ContactDto implements Contact {
+  @IsEnum(Provider)
+  type!: Provider;
+
+  @IsString()
+  @IsNotEmpty()
+  value!: string;
+}
 
 export class NotificationDto implements Notification {
   @IsString()
