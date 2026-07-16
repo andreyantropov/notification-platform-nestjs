@@ -64,6 +64,10 @@ const isDev = process.env.NODE_ENV === 'development';
           config.getOrThrow<string>('BITRIX_USER_ID'),
           config.getOrThrow<string>('BITRIX_AUTH_TOKEN'),
           config.get<number>('BITRIX_TIMEOUT_MS')!,
+          {
+            maxConcurrent: config.get<number>('BITRIX_CONCURRENCY')!,
+            minTime: config.get<number>('BITRIX_DELAY_MS')!,
+          },
         ),
     },
     {
@@ -74,6 +78,10 @@ const isDev = process.env.NODE_ENV === 'development';
           config.getOrThrow<string>('SMTP_FROM'),
           config.getOrThrow<string>('SMTP_SUBJECT'),
           config.get<number>('SMTP_TIMEOUT_MS')!,
+          {
+            maxConcurrent: config.get<number>('SMTP_CONCURRENCY')!,
+            minTime: config.get<number>('SMTP_DELAY_MS')!,
+          },
         ),
     },
     {

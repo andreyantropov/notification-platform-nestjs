@@ -20,15 +20,15 @@ export class BitrixChannel extends Channel {
 
   constructor(
     private readonly httpService: HttpService,
-    { url, userId, authToken, timeoutMs }: BitrixChannelConfig,
+    { url, userId, authToken, timeoutMs, throttle }: BitrixChannelConfig,
   ) {
-    super();
+    super(throttle);
 
     this.baseUrl = `${url}/rest/${userId}/${authToken}`;
     this.timeoutMs = timeoutMs;
   }
 
-  async send(contact: Contact, message: string): Promise<void> {
+  async performSend(contact: Contact, message: string): Promise<void> {
     try {
       await firstValueFrom(
         this.httpService

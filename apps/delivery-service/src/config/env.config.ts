@@ -52,6 +52,16 @@ export class EnvironmentVariables {
   @Transform(({ value }) => Number(value))
   BITRIX_TIMEOUT_MS = 10_000;
 
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  BITRIX_CONCURRENCY = 1;
+
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  BITRIX_DELAY_MS = 500;
+
   @IsString()
   @IsNotEmpty()
   SMTP_HOST!: string;
@@ -101,4 +111,14 @@ export class EnvironmentVariables {
   @IsOptional()
   @Transform(({ value }) => Number(value))
   SMTP_TIMEOUT_MS = 10_000;
+
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  SMTP_CONCURRENCY = 1;
+
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  SMTP_DELAY_MS = 500;
 }

@@ -9,11 +9,12 @@ describe('EmailChannel', () => {
   let mockSendMail: jest.Mock;
   let mockVerify: jest.Mock;
 
-  const mockConfig: EmailChannelConfig = {
-    from: 'noreply@test.com',
-    subject: 'Test Subject',
-    timeoutMs: 5000,
-  };
+  const mockConfig = new EmailChannelConfig(
+    'noreply@test.com',
+    'Test Subject',
+    5000,
+    {},
+  );
 
   beforeEach(async () => {
     mockSendMail = jest.fn();

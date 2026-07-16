@@ -15,16 +15,16 @@ export class EmailChannel extends Channel {
 
   constructor(
     private readonly mailerService: MailerService,
-    { from, subject, timeoutMs }: EmailChannelConfig,
+    { from, subject, timeoutMs, throttle }: EmailChannelConfig,
   ) {
-    super();
+    super(throttle);
 
     this.from = from;
     this.subject = subject;
     this.timeoutMs = timeoutMs;
   }
 
-  async send(contact: Contact, message: string): Promise<void> {
+  async performSend(contact: Contact, message: string): Promise<void> {
     try {
       await firstValueFrom(
         from(
@@ -46,8 +46,8 @@ export class EmailChannel extends Channel {
   async checkHealth(): Promise<void> {
     try {
       await this.mailerService.getTransporter().verify();
-    } catch {
-      throw new Error(`SMTP сервер недоступен`);
+    } catch (error) {
+      throw new Error(`SMTP сервер недоступен`, { cause: error });
     }
   }
 }

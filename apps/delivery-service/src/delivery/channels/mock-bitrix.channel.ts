@@ -7,7 +7,11 @@ import { Contact } from '@app/shared';
 export class MockBitrixChannel extends Channel {
   readonly type = Provider.BITRIX;
 
-  async send(contact: Contact, message: string): Promise<void> {
+  constructor() {
+    super();
+  }
+
+  async performSend(contact: Contact, message: string): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 50));
     console.log(`[MOCK BITRIX] To: ${contact.value} | Message: ${message}`);
   }

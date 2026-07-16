@@ -2,7 +2,7 @@ import { Contact } from '@app/shared';
 import { Channel } from '../channels/channel.abstract';
 import { Notification } from '@app/shared';
 
-export interface Attempt {
+interface Attempt {
   channel: Channel;
   contact: Contact;
 }
