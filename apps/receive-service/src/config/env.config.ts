@@ -1,3 +1,4 @@
+import { Environment } from '@app/shared';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
@@ -6,12 +7,6 @@ import {
   IsNotEmpty,
   IsNumber,
 } from 'class-validator';
-
-enum Environment {
-  Development = 'development',
-  Production = 'production',
-  Test = 'test',
-}
 
 export class EnvironmentVariables {
   @IsEnum(Environment)

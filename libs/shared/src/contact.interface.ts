@@ -1,4 +1,4 @@
-import { Provider } from '../enums/provider.enum';
+import { Provider } from './provider.enum';
 
 export interface Contact {
   readonly type: Provider;

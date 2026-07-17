@@ -1,3 +1,4 @@
+import { Environment } from '@app/shared';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
@@ -8,13 +9,9 @@ import {
   IsNumber,
   IsBoolean,
   IsEmail,
+  Max,
+  Min,
 } from 'class-validator';
-
-enum Environment {
-  Development = 'development',
-  Production = 'production',
-  Test = 'test',
-}
 
 export class EnvironmentVariables {
   @IsEnum(Environment)
@@ -32,6 +29,8 @@ export class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
+  @Max(65535)
   @Transform(({ value }) => Number(value))
   PORT = 3000;
 
@@ -54,6 +53,7 @@ export class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
   @Transform(({ value }) => Number(value))
   BITRIX_CONCURRENCY = 1;
 
@@ -68,6 +68,8 @@ export class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
+  @Max(65535)
   @Transform(({ value }) => Number(value))
   SMTP_PORT = 25;
 
@@ -114,6 +116,7 @@ export class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
   @Transform(({ value }) => Number(value))
   SMTP_CONCURRENCY = 1;
 
