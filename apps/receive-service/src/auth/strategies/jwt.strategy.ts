@@ -7,14 +7,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
 import { JwtStrategyConfig } from './jwt.strategy.config';
+import { AuthorizedUser } from '../types/authorized-user.interface';
 
 interface KeycloakJwtPayload {
   readonly azp?: string;
   readonly sub: string;
-}
-
-interface JwtClient {
-  readonly clientId: string;
 }
 
 @Injectable()
@@ -34,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  validate(payload: KeycloakJwtPayload): JwtClient {
+  validate(payload: KeycloakJwtPayload): AuthorizedUser {
     return {
       clientId: payload.azp || payload.sub,
     };

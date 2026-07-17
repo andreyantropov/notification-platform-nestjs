@@ -1,15 +1,11 @@
 import { ExecutionContext } from '@nestjs/common';
 import { MockJwtAuthGuard } from './mock-jwt-auth.guard';
 import { Request } from 'express';
-
-interface MockUser {
-  clientId: string;
-  name: string;
-}
+import { AuthorizedUser } from '../types/authorized-user.interface';
 
 describe('MockJwtAuthGuard', () => {
   let guard: MockJwtAuthGuard;
-  let mockRequest: Partial<Request & { user?: MockUser }>;
+  let mockRequest: Partial<Request & { user?: AuthorizedUser }>;
   let mockExecutionContext: jest.Mocked<ExecutionContext>;
 
   beforeEach(() => {
