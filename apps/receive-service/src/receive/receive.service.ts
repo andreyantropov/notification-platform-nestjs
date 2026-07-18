@@ -7,6 +7,7 @@ import {
   DELIVERY_NOTIFICATIONS_SEND_QUEUE,
   RMQ_CLIENT,
 } from './receive.constants';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ReceiveService {
@@ -15,10 +16,10 @@ export class ReceiveService {
     private readonly rmqClient: ClientProxy,
   ) {}
 
-  receive(
+  async receive(
     createNotification: CreateNotification,
     clientId: string,
-  ): Notification {
+  ): Promise<Notification> {
     const notification: Notification = {
       ...createNotification,
       id: v4(),
@@ -26,7 +27,9 @@ export class ReceiveService {
       clientId,
     };
 
-    this.rmqClient.emit(DELIVERY_NOTIFICATIONS_SEND_QUEUE, notification);
+    await firstValueFrom(
+      this.rmqClient.emit(DELIVERY_NOTIFICATIONS_SEND_QUEUE, notification),
+    );
 
     return notification;
   }

@@ -29,11 +29,11 @@ export class ReceiveController {
 
   @Post()
   @HttpCode(202)
-  createNotification(
+  async createNotification(
     @Body() data: CreateNotificationDto,
     @GetClientId() clientId: string,
   ) {
-    return this.receiveService.receive(data, clientId);
+    return await this.receiveService.receive(data, clientId);
   }
 
   @Post('batch')
@@ -42,48 +42,65 @@ export class ReceiveController {
     @GetClientId() clientId: string,
     @Res({ passthrough: true }) res: ServerResponse,
   ) {
-    const results: BatchItemResponse[] = [];
+    const promises = data.items.map(
+      async (item): Promise<BatchItemResponse> => {
+        try {
+          const singleDto = plainToInstance(CreateNotificationDto, item);
+          const validationErrors = await validate(singleDto, {
+            whitelist: true,
+            forbidNonWhitelisted: true,
+          });
 
+          if (validationErrors.length > 0) {
+            return {
+              status: 'client_error',
+              data: item,
+              error: validationErrors.map((err) => ({
+                property: err.property,
+                constraints: err.constraints,
+              })),
+            };
+          }
+
+          const createdNotification = await this.receiveService.receive(
+            singleDto,
+            clientId,
+          );
+
+          return {
+            status: 'success',
+            data: createdNotification,
+          };
+        } catch {
+          return {
+            status: 'server_error',
+            data: item,
+            error: 'Internal Error',
+          };
+        }
+      },
+    );
+
+    const settledResults = await Promise.allSettled(promises);
+
+    const results: BatchItemResponse[] = [];
     let successCount = 0;
     let clientErrorCount = 0;
     let serverErrorCount = 0;
 
-    for (const item of data.items) {
-      try {
-        const singleDto = plainToInstance(CreateNotificationDto, item);
-        const validationErrors = await validate(singleDto, {
-          whitelist: true,
-          forbidNonWhitelisted: true,
-        });
+    for (const settledResult of settledResults) {
+      if (settledResult.status === 'fulfilled') {
+        const itemResult = settledResult.value;
+        results.push(itemResult);
 
-        if (validationErrors.length > 0) {
-          clientErrorCount++;
-          results.push({
-            status: 'client_error',
-            data: item,
-            error: validationErrors.map((err) => ({
-              property: err.property,
-              constraints: err.constraints,
-            })),
-          });
-          continue;
-        }
-
-        const createdNotification = this.receiveService.receive(
-          singleDto,
-          clientId,
-        );
-
-        successCount++;
-        results.push({
-          status: 'success',
-          data: createdNotification,
-        });
-      } catch {
+        if (itemResult.status === 'success') successCount++;
+        if (itemResult.status === 'client_error') clientErrorCount++;
+        if (itemResult.status === 'server_error') serverErrorCount++;
+      } else {
         serverErrorCount++;
         results.push({
           status: 'server_error',
-          data: item,
+          data: null,
           error: 'Internal Error',
         });
       }

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClientProxy } from '@nestjs/microservices';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ReceiveService } from './receive.service';
 import { CreateNotification } from './types/CreateNotification';
 import { Notification, Mode, Provider } from '@app/shared';
@@ -38,7 +38,7 @@ describe('ReceiveService', () => {
   });
 
   describe('receive', () => {
-    it('should successfully create a notification and emit it to RabbitMQ', () => {
+    it('should successfully create a notification and emit it to RabbitMQ', async () => {
       const mockClientId = 'client-123';
       const mockCreateNotificationDto: CreateNotification = {
         message: 'Hello, World!',
@@ -52,7 +52,7 @@ describe('ReceiveService', () => {
         correlationId: 'corr-456',
       };
 
-      const result: Notification = service.receive(
+      const result: Notification = await service.receive(
         mockCreateNotificationDto,
         mockClientId,
       );
@@ -77,6 +77,28 @@ describe('ReceiveService', () => {
         DELIVERY_NOTIFICATIONS_SEND_QUEUE,
         result,
       );
+    });
+
+    it('should throw an error if RabbitMQ emit fails', async () => {
+      const mockClientId = 'client-123';
+      const mockCreateNotificationDto: CreateNotification = {
+        message: 'Hello, World!',
+        mode: Mode.SEQUENTIAL,
+        contacts: [
+          {
+            type: Provider.BITRIX,
+            value: '123',
+          },
+        ],
+        correlationId: 'corr-456',
+      };
+
+      const mockError = new Error('RMQ Connection Lost');
+      clientProxyMock.emit.mockReturnValue(throwError(() => mockError));
+
+      await expect(
+        service.receive(mockCreateNotificationDto, mockClientId),
+      ).rejects.toThrow('RMQ Connection Lost');
     });
   });
 });
