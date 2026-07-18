@@ -173,4 +173,36 @@ describe('ReceiveService', () => {
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('checkHealth', () => {
+    it('should return health status when RabbitMQ is available', async () => {
+      const result = await service.checkHealth();
+
+      expect(result).toEqual({
+        status: 'ok',
+        rmq: 'connected',
+      });
+    });
+
+    it('should throw an error if RabbitMQ client is not initialized', async () => {
+      const moduleWithoutClient: TestingModule = await Test.createTestingModule(
+        {
+          providers: [
+            ReceiveService,
+            {
+              provide: RMQ_CLIENT,
+              useValue: null,
+            },
+          ],
+        },
+      ).compile();
+
+      const serviceWithoutClient =
+        moduleWithoutClient.get<ReceiveService>(ReceiveService);
+
+      await expect(serviceWithoutClient.checkHealth()).rejects.toThrow(
+        'RabbitMQ недоступен',
+      );
+    });
+  });
 });
