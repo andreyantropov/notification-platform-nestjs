@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ClientProxy } from '@nestjs/microservices';
 import { of, throwError } from 'rxjs';
 import { ReceiveService } from './receive.service';
-import { CreateNotification } from './types/CreateNotification';
+import { CreateNotification } from './types/create-notification.type';
 import { Notification, Mode, Provider } from '@app/shared';
 import {
   RMQ_CLIENT,
@@ -99,6 +99,78 @@ describe('ReceiveService', () => {
       await expect(
         service.receive(mockCreateNotificationDto, mockClientId),
       ).rejects.toThrow('RMQ Connection Lost');
+    });
+  });
+
+  describe('receiveBatch', () => {
+    it('should process a mix of successful, invalid, and server-error items correctly', async () => {
+      const mockClientId = 'client-123';
+
+      const validItem: CreateNotification = {
+        message: 'Valid notification',
+        mode: Mode.SEQUENTIAL,
+        contacts: [{ type: Provider.BITRIX, value: '123' }],
+        correlationId: 'corr-valid',
+      };
+
+      const invalidItem = {
+        mode: Mode.SEQUENTIAL,
+        contacts: [{ type: Provider.BITRIX, value: '123' }],
+        correlationId: 'corr-invalid',
+      };
+
+      const serverErrorItem: CreateNotification = {
+        message: 'Triggers server error',
+        mode: Mode.SEQUENTIAL,
+        contacts: [{ type: Provider.BITRIX, value: '123' }],
+        correlationId: 'corr-server-error',
+      };
+
+      const items: readonly unknown[] = [
+        validItem,
+        invalidItem,
+        serverErrorItem,
+      ];
+
+      const mockError = new Error('RMQ Internal Error');
+      clientProxyMock.emit
+        .mockReturnValueOnce(of(undefined))
+        .mockReturnValueOnce(throwError(() => mockError));
+
+      const response = await service.receiveBatch(items, mockClientId);
+
+      expect(response.summary).toEqual({
+        total: 3,
+        success: 1,
+        clientError: 1,
+        serverError: 1,
+      });
+
+      expect(response.items).toHaveLength(3);
+
+      expect(response.items[0]).toMatchObject({
+        status: 'success',
+        data: {
+          message: validItem.message,
+          correlationId: validItem.correlationId,
+          clientId: mockClientId,
+        },
+      });
+
+      expect(response.items[1]).toMatchObject({
+        status: 'client_error',
+        data: invalidItem,
+      });
+      expect(response.items[1].error).toBeDefined();
+      expect(Array.isArray(response.items[1].error)).toBe(true);
+
+      expect(response.items[2]).toEqual({
+        status: 'server_error',
+        data: serverErrorItem,
+        error: 'Internal Error',
+      });
+
+      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
     });
   });
 });

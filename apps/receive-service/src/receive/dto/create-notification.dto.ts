@@ -11,7 +11,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Mode, Contact, Provider } from '@app/shared';
-import { CreateNotification } from '../types/CreateNotification';
+import { CreateNotification } from '../types/create-notification.type';
 
 class CreateNotificationContactDto implements Contact {
   @IsEnum(Provider)

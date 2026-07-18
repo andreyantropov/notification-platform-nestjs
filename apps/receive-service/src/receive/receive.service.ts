@@ -1,6 +1,6 @@
 import { Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateNotification } from './types/CreateNotification';
+import { CreateNotification } from './types/create-notification.type';
 import { v4 } from 'uuid';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -8,6 +8,11 @@ import {
   RMQ_CLIENT,
 } from './receive.constants';
 import { firstValueFrom } from 'rxjs';
+import { plainToInstance } from 'class-transformer';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { BatchItemResponse } from './types/batch-item-response.interface';
+import { BatchResponse } from './types/batch-response.interface';
+import { validate } from 'class-validator';
 
 @Injectable()
 export class ReceiveService {
@@ -32,5 +37,91 @@ export class ReceiveService {
     );
 
     return notification;
+  }
+
+  async receiveBatch(
+    items: readonly unknown[],
+    clientId: string,
+  ): Promise<BatchResponse> {
+    const promises = items.map((item) =>
+      this.processSingleItem(item, clientId),
+    );
+    const settledResults = await Promise.allSettled(promises);
+
+    return this.aggregateBatchResults(settledResults);
+  }
+
+  private async processSingleItem(
+    item: unknown,
+    clientId: string,
+  ): Promise<BatchItemResponse> {
+    try {
+      const singleDto = plainToInstance(CreateNotificationDto, item);
+      const validationErrors = await validate(singleDto, {
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      });
+
+      if (validationErrors.length > 0) {
+        return {
+          status: 'client_error',
+          data: item,
+          error: validationErrors.map((err) => ({
+            property: err.property,
+            constraints: err.constraints,
+          })),
+        };
+      }
+
+      const createdNotification = await this.receive(singleDto, clientId);
+
+      return {
+        status: 'success',
+        data: createdNotification,
+      };
+    } catch {
+      return {
+        status: 'server_error',
+        data: item,
+        error: 'Internal Error',
+      };
+    }
+  }
+
+  private aggregateBatchResults(
+    settledResults: PromiseSettledResult<BatchItemResponse>[],
+  ): BatchResponse {
+    const results: BatchItemResponse[] = [];
+    let success = 0;
+    let clientError = 0;
+    let serverError = 0;
+
+    for (const settledResult of settledResults) {
+      if (settledResult.status === 'fulfilled') {
+        const itemResult = settledResult.value;
+        results.push(itemResult);
+
+        if (itemResult.status === 'success') success++;
+        if (itemResult.status === 'client_error') clientError++;
+        if (itemResult.status === 'server_error') serverError++;
+      } else {
+        serverError++;
+        results.push({
+          status: 'server_error',
+          data: null,
+          error: 'Internal Error',
+        });
+      }
+    }
+
+    return {
+      summary: {
+        total: settledResults.length,
+        success,
+        clientError,
+        serverError,
+      },
+      items: results,
+    };
   }
 }
