@@ -6,6 +6,7 @@ import {
   IsUrl,
   IsNotEmpty,
   IsNumber,
+  IsString,
 } from 'class-validator';
 
 export class EnvironmentVariables {
@@ -21,4 +22,16 @@ export class EnvironmentVariables {
   @IsOptional()
   @Transform(({ value }) => Number(value))
   PORT = 3000;
+
+  @IsString()
+  @IsNotEmpty()
+  AUTH_AUDIENCE!: string;
+
+  @IsUrl({ require_tld: false })
+  @IsNotEmpty()
+  AUTH_ISSUER_URL!: string;
+
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  AUTH_JWKS_URI?: string;
 }

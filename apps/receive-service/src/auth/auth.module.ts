@@ -16,9 +16,9 @@ const isDev = process.env.NODE_ENV === 'development';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return new JwtStrategyConfig(
-          config.getOrThrow<string>('KEYCLOAK_AUDIENCE'),
-          config.getOrThrow<string>('KEYCLOAK_ISSUER_URL'),
-          config.getOrThrow<string>('KEYCLOAK_JWKS_URI'),
+          config.getOrThrow<string>('AUTH_AUDIENCE'),
+          config.getOrThrow<string>('AUTH_ISSUER_URL'),
+          config.getOrThrow<string>('AUTH_JWKS_URI'),
         );
       },
     },

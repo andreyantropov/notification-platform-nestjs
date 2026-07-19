@@ -1,9 +1,33 @@
 import { Module } from '@nestjs/common';
 import { ReceiveService } from './receive.service';
 import { ReceiveController } from './receive.controller';
+import { ReceiveIndicator } from './indicators/receive.indicator';
+import { AuthModule } from '../auth';
+import { ConfigService } from '@nestjs/config';
+import { RMQ_CLIENT } from './receive.constants';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
+  imports: [
+    ClientsModule.registerAsync([
+      {
+        name: RMQ_CLIENT,
+        inject: [ConfigService],
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('RMQ_URL')],
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+      },
+    ]),
+    AuthModule,
+  ],
   controllers: [ReceiveController],
-  providers: [ReceiveService],
+  providers: [ReceiveService, ReceiveIndicator],
+  exports: [ReceiveIndicator],
 })
 export class ReceiveModule {}
