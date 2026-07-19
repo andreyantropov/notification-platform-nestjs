@@ -1,28 +1,34 @@
-FROM node:24-alpine AS builder
+FROM node:24-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 WORKDIR /app
 
-COPY package*.json tsconfig*.json nest-cli.json ./
+FROM base AS builder
 
-RUN npm ci
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nest-cli.json tsconfig*.json ./
+
+RUN pnpm install --frozen-lockfile
 
 COPY apps/ ./apps
 COPY libs/ ./libs
 
 ARG SERVICE_NAME
-RUN npx nest build ${SERVICE_NAME}
+RUN pnpm run build ${SERVICE_NAME}
 
-RUN npm prune --production
+RUN pnpm prune --prod
 
-FROM node:24-alpine
+FROM base AS runner
 
 WORKDIR /app
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+ARG SERVICE_NAME
+COPY --from=builder /app/dist/apps/${SERVICE_NAME} ./dist
 COPY package.json ./
 
-ARG SERVICE_NAME
 ENV SERVICE=${SERVICE_NAME}
 
-CMD npm run start:prod:${SERVICE}
+CMD ["node", "dist/main.js"]
