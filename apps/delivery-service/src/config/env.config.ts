@@ -23,7 +23,7 @@ export class EnvironmentVariables {
   @Transform(({ value }) => Number(value))
   AXIOS_TIMEOUT_MS = 30_000;
 
-  @IsUrl({ require_tld: false })
+  @IsUrl({ require_tld: false, protocols: ['amqp', 'amqps'] })
   @IsNotEmpty()
   RABBITMQ_URL!: string;
 

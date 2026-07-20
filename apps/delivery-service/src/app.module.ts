@@ -8,6 +8,11 @@ import { HealthModule } from './health';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `apps/delivery-service/.env.${process.env.NODE_ENV}.local`,
+        `apps/delivery-service/.env.${process.env.NODE_ENV}`,
+        'apps/delivery-service/.env',
+      ],
       validate,
     }),
     DeliveryModule,

@@ -14,7 +14,7 @@ export class EnvironmentVariables {
   @IsOptional()
   NODE_ENV: Environment = Environment.Development;
 
-  @IsUrl({ require_tld: false })
+  @IsUrl({ require_tld: false, protocols: ['amqp', 'amqps'] })
   @IsNotEmpty()
   RABBITMQ_URL!: string;
 

@@ -6,6 +6,7 @@ import { AuthModule } from '../auth';
 import { ConfigService } from '@nestjs/config';
 import { RMQ_CLIENT } from './receive.constants';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         useFactory: (config: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [config.getOrThrow<string>('RMQ_URL')],
+            urls: [config.getOrThrow<string>('RABBITMQ_URL')],
             queueOptions: {
               durable: true,
             },
@@ -25,6 +26,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
     ]),
     AuthModule,
+    TerminusModule,
   ],
   controllers: [ReceiveController],
   providers: [ReceiveService, ReceiveIndicator],

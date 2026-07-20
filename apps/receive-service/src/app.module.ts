@@ -9,6 +9,11 @@ import { APP_PIPE } from '@nestjs/core';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `apps/receive-service/.env.${process.env.NODE_ENV}.local`,
+        `apps/receive-service/.env.${process.env.NODE_ENV}`,
+        'apps/receive-service/.env',
+      ],
       validate,
     }),
     ReceiveModule,
