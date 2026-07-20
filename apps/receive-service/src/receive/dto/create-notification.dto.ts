@@ -10,25 +10,28 @@ import {
   ArrayMaxSize,
   MaxLength,
 } from 'class-validator';
-import { Mode, Contact, Provider } from '@app/shared';
+import { Mode } from '@app/shared';
 import { CreateNotification } from '../types/create-notification.type';
-
-class CreateNotificationContactDto implements Contact {
-  @IsEnum(Provider)
-  type!: Provider;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  value!: string;
-}
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CreateNotificationContactDto } from './create-notification-contact.dto';
 
 export class CreateNotificationDto implements CreateNotification {
+  @ApiProperty({
+    example: 'req-12345',
+    maxLength: 64,
+    description: 'Уникальный ID запроса для идемпотентности',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
   readonly correlationId!: string;
 
+  @ApiProperty({
+    type: [CreateNotificationContactDto],
+    minItems: 1,
+    maxItems: 2,
+    description: 'Список контактов',
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(2)
@@ -36,11 +39,21 @@ export class CreateNotificationDto implements CreateNotification {
   @Type(() => CreateNotificationContactDto)
   readonly contacts!: readonly CreateNotificationContactDto[];
 
+  @ApiProperty({
+    example: 'Приветик через Интернетик!',
+    maxLength: 1024,
+    description: 'Текст уведомления',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(1024)
   readonly message!: string;
 
+  @ApiPropertyOptional({
+    enum: Mode,
+    default: Mode.SEQUENTIAL,
+    description: 'Режим отправки уведомления',
+  })
   @IsEnum(Mode)
   @IsOptional()
   readonly mode = Mode.SEQUENTIAL;

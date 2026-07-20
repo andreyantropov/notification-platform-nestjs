@@ -13,6 +13,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { BatchItemResponse } from './types/batch-item-response.interface';
 import { BatchResponse } from './types/batch-response.interface';
 import { validate } from 'class-validator';
+import { BatchResultStatus } from './types/batch-result-status.enum';
 
 @Injectable()
 export class ReceiveService {
@@ -64,7 +65,7 @@ export class ReceiveService {
 
       if (validationErrors.length > 0) {
         return {
-          status: 'client_error',
+          status: BatchResultStatus.CLIENT_ERROR,
           data: item,
           error: validationErrors.map((err) => ({
             property: err.property,
@@ -76,12 +77,12 @@ export class ReceiveService {
       const createdNotification = await this.receive(singleDto, clientId);
 
       return {
-        status: 'success',
+        status: BatchResultStatus.SUCCESS,
         data: createdNotification,
       };
     } catch {
       return {
-        status: 'server_error',
+        status: BatchResultStatus.SERVER_ERROR,
         data: item,
         error: 'Internal Error',
       };
@@ -101,13 +102,13 @@ export class ReceiveService {
         const itemResult = settledResult.value;
         results.push(itemResult);
 
-        if (itemResult.status === 'success') success++;
-        if (itemResult.status === 'client_error') clientError++;
-        if (itemResult.status === 'server_error') serverError++;
+        if (itemResult.status === BatchResultStatus.SUCCESS) success++;
+        if (itemResult.status === BatchResultStatus.CLIENT_ERROR) clientError++;
+        if (itemResult.status === BatchResultStatus.SERVER_ERROR) serverError++;
       } else {
         serverError++;
         results.push({
-          status: 'server_error',
+          status: BatchResultStatus.SERVER_ERROR,
           data: null,
           error: 'Internal Error',
         });

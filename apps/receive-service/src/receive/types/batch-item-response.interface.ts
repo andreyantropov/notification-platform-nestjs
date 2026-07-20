@@ -1,4 +1,4 @@
-import { BatchResultStatus } from './batch-result-status.type';
+import { BatchResultStatus } from './batch-result-status.enum';
 
 export interface BatchItemResponse {
   readonly status: BatchResultStatus;
