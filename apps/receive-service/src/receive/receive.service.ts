@@ -1,7 +1,7 @@
 import { Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotification } from './types/create-notification.type';
-import { v4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   DELIVERY_NOTIFICATIONS_SEND_QUEUE,
@@ -27,7 +27,7 @@ export class ReceiveService {
   ): Promise<Notification> {
     const notification: Notification = {
       ...createNotification,
-      id: v4(),
+      id: randomUUID(),
       createdAt: new Date().toISOString(),
       clientId,
     };

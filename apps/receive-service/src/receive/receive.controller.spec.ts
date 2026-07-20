@@ -1,3 +1,7 @@
+jest.mock('jwks-rsa', () => ({
+  passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReceiveController } from './receive.controller';
 import { ReceiveService } from './receive.service';

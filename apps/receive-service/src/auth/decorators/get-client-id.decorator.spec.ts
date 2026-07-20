@@ -1,67 +1,62 @@
-import { ExecutionContext } from '@nestjs/common';
-import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Request } from 'express';
-import { GetClientId } from './get-client-id.decorator';
+import { getClientIdFactory } from './get-client-id.decorator';
 import { AuthorizedUser } from '../types/authorized-user.interface';
 
-function getDecoratorFactory(
-  decorator: (...args: unknown[]) => unknown,
-): (data: unknown, ctx: ExecutionContext) => string {
-  const target = { [ROUTE_ARGS_METADATA]: undefined } as object;
-  decorator(target, 'property', 0);
-  const metadata = Reflect.getMetadata(
-    ROUTE_ARGS_METADATA,
-    target.constructor,
-  ) as Record<
-    string,
-    { factory: (data: unknown, ctx: ExecutionContext) => string }
-  >;
-  return metadata[Object.keys(metadata)[0]].factory;
-}
+describe('GetClientId Decorator Factory', () => {
+  const createMockContext = (user?: AuthorizedUser): ExecutionContext => {
+    const mockRequest = { user } as Request & { user?: AuthorizedUser };
 
-describe('GetClientIdDecorator', () => {
-  let factory: (data: unknown, ctx: ExecutionContext) => string;
-  let mockRequest: Partial<Request & { user?: AuthorizedUser }>;
-  let mockExecutionContext: jest.Mocked<ExecutionContext>;
+    const mockHttpArgumentsHost = {
+      getRequest: () => mockRequest,
+      getResponse: () => ({}),
+      getNext: () => ({}),
+    } as unknown as HttpArgumentsHost;
 
-  beforeEach(() => {
-    factory = getDecoratorFactory(GetClientId);
+    return {
+      switchToHttp: () => mockHttpArgumentsHost,
+      getClass: () => ({}),
+      getHandler: () => ({}),
+      getArgs: () => [],
+      getType: () => 'http',
+      switchToRpc: () => ({}),
+      switchToWs: () => ({}),
+    } as unknown as ExecutionContext;
+  };
 
-    mockRequest = {};
+  it('should return clientId when it is present in the request user object', () => {
+    const expectedClientId = 'client-123-abc';
+    const mockUser: AuthorizedUser = {
+      clientId: expectedClientId,
+    };
+    const mockContext = createMockContext(mockUser);
 
-    mockExecutionContext = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue(mockRequest),
-      }),
-    } as unknown as jest.Mocked<ExecutionContext>;
+    const result = getClientIdFactory(null, mockContext);
+
+    expect(result).toBe(expectedClientId);
   });
 
-  describe('execute', () => {
-    it('should successfully extract clientId from request user object', () => {
-      mockRequest.user = {
-        clientId: 'test-client-id',
-      };
+  it('should throw UnauthorizedException when user object is missing in request', () => {
+    const mockContext = createMockContext(undefined);
 
-      const result = factory(undefined, mockExecutionContext);
+    expect(() => getClientIdFactory(null, mockContext)).toThrow(
+      UnauthorizedException,
+    );
+    expect(() => getClientIdFactory(null, mockContext)).toThrow(
+      'В запросе отсутствует id клиента',
+    );
+  });
 
-      expect(result).toBe('test-client-id');
-      expect(mockExecutionContext.switchToHttp).toHaveBeenCalledTimes(1);
-    });
+  it('should throw UnauthorizedException when clientId is missing in user object', () => {
+    const mockUserWithoutClientId = {} as AuthorizedUser;
+    const mockContext = createMockContext(mockUserWithoutClientId);
 
-    it('should return an empty string if user object is missing in request', () => {
-      mockRequest.user = undefined;
-
-      const result = factory(undefined, mockExecutionContext);
-
-      expect(result).toBe('');
-    });
-
-    it('should return an empty string if clientId is missing in user object', () => {
-      mockRequest.user = {} as AuthorizedUser;
-
-      const result = factory(undefined, mockExecutionContext);
-
-      expect(result).toBe('');
-    });
+    expect(() => getClientIdFactory(null, mockContext)).toThrow(
+      UnauthorizedException,
+    );
+    expect(() => getClientIdFactory(null, mockContext)).toThrow(
+      'В запросе отсутствует id клиента',
+    );
   });
 });

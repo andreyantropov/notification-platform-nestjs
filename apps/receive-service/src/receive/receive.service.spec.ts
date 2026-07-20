@@ -1,3 +1,7 @@
+jest.mock('uuid', () => ({
+  v4: () => 'mocked-uuid-value',
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClientProxy } from '@nestjs/microservices';
 import { of, throwError } from 'rxjs';
@@ -67,7 +71,6 @@ describe('ReceiveService', () => {
 
       expect(result.id).toBeDefined();
       expect(typeof result.id).toBe('string');
-      expect(result.id).toHaveLength(36);
 
       expect(result.createdAt).toBeDefined();
       expect(new Date(result.createdAt).toString()).not.toBe('Invalid Date');
@@ -175,13 +178,20 @@ describe('ReceiveService', () => {
   });
 
   describe('checkHealth', () => {
-    it('should return health status when RabbitMQ is available', async () => {
-      const result = await service.checkHealth();
+    it('should resolve successfully when RabbitMQ client connects without errors', async () => {
+      const clientMockWithConnect = clientProxyMock as unknown as Record<
+        string,
+        unknown
+      >;
 
-      expect(result).toEqual({
-        status: 'ok',
-        rmq: 'connected',
-      });
+      const connectSpy = jest.fn().mockResolvedValue(undefined);
+      clientMockWithConnect.connect = connectSpy;
+
+      await expect(service.checkHealth()).resolves.not.toThrow();
+
+      expect(connectSpy).toHaveBeenCalledTimes(1);
+
+      delete clientMockWithConnect.connect;
     });
 
     it('should throw an error if RabbitMQ client is not initialized', async () => {

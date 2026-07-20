@@ -1,3 +1,7 @@
+jest.mock('jwks-rsa', () => ({
+  passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
@@ -85,7 +89,7 @@ describe('HealthController', () => {
 
       await (passedFunctions[0] as () => Promise<unknown>)();
       expect(mockisHealthy).toHaveBeenCalledTimes(1);
-      expect(mockisHealthy).toHaveBeenCalledWith('delivery-service');
+      expect(mockisHealthy).toHaveBeenCalledWith('receive-service');
     });
   });
 });
