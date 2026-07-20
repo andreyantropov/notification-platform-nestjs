@@ -32,6 +32,6 @@ export class EnvironmentVariables {
   AUTH_ISSUER_URL!: string;
 
   @IsUrl({ require_tld: false })
-  @IsOptional()
-  AUTH_JWKS_URI?: string;
+  @IsNotEmpty()
+  AUTH_JWKS_URI!: string;
 }
