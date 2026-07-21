@@ -11,8 +11,6 @@ export const getRmqOptions = (
     queue: DELIVERY_NOTIFICATIONS_SEND_QUEUE,
     noAck: false,
     prefetchCount: 1,
-    queueOptions: {
-      durable: true,
-    },
+    noAssert: true,
   },
 });

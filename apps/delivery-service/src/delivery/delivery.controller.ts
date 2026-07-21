@@ -1,8 +1,9 @@
 import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { DeliveryService } from './delivery.service';
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
 import { SendNotificationCommandDto } from './dto/send-notification.command.dto';
+import { Channel, Message } from 'amqplib';
 
 @Controller()
 export class DeliveryController {
@@ -12,7 +13,17 @@ export class DeliveryController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async handleNotification(
     @Payload() data: SendNotificationCommandDto,
+    @Ctx() context: RmqContext,
   ): Promise<void> {
-    await this.deliveryService.deliver(data);
+    const channel: Channel = context.getChannelRef() as Channel;
+    const originalMsg: Message = context.getMessage() as Message;
+
+    try {
+      await this.deliveryService.deliver(data);
+
+      channel.ack(originalMsg);
+    } catch {
+      channel.nack(originalMsg, false, false);
+    }
   }
 }
