@@ -5,6 +5,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MockJwtAuthGuard } from './guards/mock-jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtStrategyConfig } from './strategies/jwt.strategy.config';
+import { AUTH_GUARD } from './auth.constants';
+import { AppAuthGuard } from './guards/app-auth.guard';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -24,10 +26,11 @@ const isDev = process.env.NODE_ENV === 'development';
     },
     JwtStrategy,
     {
-      provide: JwtAuthGuard,
+      provide: AUTH_GUARD,
       useClass: isDev ? MockJwtAuthGuard : JwtAuthGuard,
     },
+    AppAuthGuard,
   ],
-  exports: [JwtAuthGuard],
+  exports: [AUTH_GUARD, AppAuthGuard],
 })
 export class AuthModule {}

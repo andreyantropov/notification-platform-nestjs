@@ -9,7 +9,7 @@ import {
 import { ReceiveService } from './receive.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto';
-import { JwtAuthGuard, GetClientId } from '../auth';
+import { AppAuthGuard, GetClientId } from '../auth';
 import { ServerResponse } from 'http';
 import {
   ApiTags,
@@ -23,7 +23,7 @@ import { NotificationResponseDto } from './dto/notification-response.dto';
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AppAuthGuard)
 export class ReceiveController {
   constructor(private readonly receiveService: ReceiveService) {}
 
