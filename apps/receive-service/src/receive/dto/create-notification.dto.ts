@@ -40,7 +40,7 @@ export class CreateNotificationDto implements CreateNotification {
   readonly contacts!: readonly CreateNotificationContactDto[];
 
   @ApiProperty({
-    example: 'Приветик через Интернетик!',
+    example: 'Тестовое уведомление',
     maxLength: 1024,
     description: 'Текст уведомления',
   })

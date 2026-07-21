@@ -36,7 +36,7 @@ export class NotificationResponseDto {
   contacts!: readonly Contact[];
 
   @ApiProperty({
-    example: 'Приветик через интернетик!',
+    example: 'Тестовое уведомление',
     description: 'Текст уведомления',
   })
   message!: string;

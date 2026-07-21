@@ -5,14 +5,14 @@ import { IsEnum, IsString, IsNotEmpty, MaxLength } from 'class-validator';
 export class CreateNotificationContactDto implements Contact {
   @ApiProperty({
     enum: Provider,
-    example: 'bitrix',
+    example: Provider.BITRIX,
     description: 'Тип канала отправки',
   })
   @IsEnum(Provider)
   type!: Provider;
 
   @ApiProperty({
-    example: '123',
+    example: '205',
     maxLength: 255,
     description: 'Адрес назначения (bitrix id/email)',
   })
