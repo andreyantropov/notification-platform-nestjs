@@ -3,11 +3,11 @@ import {
   HealthIndicatorService,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { ReceiveIndicator } from './receive.indicator';
+import { RmqIndicator } from './rmq.indicator';
 import { ReceiveService } from '../receive.service';
 
-describe('ReceiveIndicator', () => {
-  let indicator: ReceiveIndicator;
+describe('RmqIndicator', () => {
+  let indicator: RmqIndicator;
 
   let receiveServiceMock: Record<'checkHealth', jest.Mock>;
   let healthIndicatorServiceMock: Record<'check', jest.Mock>;
@@ -30,7 +30,7 @@ describe('ReceiveIndicator', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ReceiveIndicator,
+        RmqIndicator,
         {
           provide: ReceiveService,
           useValue: receiveServiceMock,
@@ -42,7 +42,7 @@ describe('ReceiveIndicator', () => {
       ],
     }).compile();
 
-    indicator = module.get<ReceiveIndicator>(ReceiveIndicator);
+    indicator = module.get<RmqIndicator>(RmqIndicator);
   });
 
   describe('constructor', () => {
@@ -74,8 +74,9 @@ describe('ReceiveIndicator', () => {
     it('should return down status when receiveService checkHealth throws an error', async () => {
       const mockKey = 'delivery-service';
       const mockError = new Error('RabbitMQ недоступен');
+
       const mockDownResult: HealthIndicatorResult = {
-        [mockKey]: { status: 'down', error: mockError },
+        [mockKey]: { status: 'down', message: 'RabbitMQ недоступен' },
       };
 
       receiveServiceMock.checkHealth.mockImplementation(() =>
@@ -88,8 +89,9 @@ describe('ReceiveIndicator', () => {
       expect(result).toEqual(mockDownResult);
       expect(healthIndicatorServiceMock.check).toHaveBeenCalledWith(mockKey);
       expect(receiveServiceMock.checkHealth).toHaveBeenCalledTimes(1);
+
       expect(mockIndicatorBuilder.down).toHaveBeenCalledWith({
-        error: mockError,
+        message: 'RabbitMQ недоступен',
       });
     });
   });

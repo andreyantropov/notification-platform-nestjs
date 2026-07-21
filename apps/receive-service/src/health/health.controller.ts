@@ -1,14 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { ReceiveIndicator } from '../receive';
+import { RmqIndicator } from '../receive';
 
 @ApiExcludeController()
 @Controller('health')
 export class HealthController {
   constructor(
     private readonly healthCheckService: HealthCheckService,
-    private readonly receiveIndicator: ReceiveIndicator,
+    private readonly rmqIndicator: RmqIndicator,
   ) {}
 
   @Get('live')
@@ -23,7 +23,7 @@ export class HealthController {
   @HealthCheck()
   async readiness() {
     return this.healthCheckService.check([
-      () => this.receiveIndicator.isHealthy('receive-service'),
+      () => this.rmqIndicator.isHealthy('rmq'),
     ]);
   }
 }

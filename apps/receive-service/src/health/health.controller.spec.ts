@@ -5,7 +5,7 @@ jest.mock('jwks-rsa', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { ReceiveIndicator } from '../receive';
+import { RmqIndicator } from '../receive';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -34,7 +34,7 @@ describe('HealthController', () => {
           },
         },
         {
-          provide: ReceiveIndicator,
+          provide: RmqIndicator,
           useValue: {
             isHealthy: mockisHealthy,
           },
@@ -89,7 +89,7 @@ describe('HealthController', () => {
 
       await (passedFunctions[0] as () => Promise<unknown>)();
       expect(mockisHealthy).toHaveBeenCalledTimes(1);
-      expect(mockisHealthy).toHaveBeenCalledWith('receive-service');
+      expect(mockisHealthy).toHaveBeenCalledWith('rmq');
     });
   });
 });

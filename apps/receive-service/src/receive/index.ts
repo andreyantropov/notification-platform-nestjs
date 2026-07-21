@@ -1,2 +1,2 @@
 export * from './receive.module';
-export * from './indicators/receive.indicator';
+export * from './indicators/rmq.indicator';

@@ -7,7 +7,7 @@ import { Channel } from '../channels/channel.abstract';
 import { CHANNELS } from '../delivery.constants';
 
 @Injectable()
-export class DeliveryIndicator {
+export class ChannelsIndicator {
   constructor(
     private readonly healthIndicatorService: HealthIndicatorService,
     @Inject(CHANNELS) private readonly channels: readonly Channel[],
@@ -27,10 +27,10 @@ export class DeliveryIndicator {
       }
     }
 
-    if (errors.length === 0) {
-      return indicator.up();
+    if (errors.length !== 0) {
+      return indicator.down({ errors });
     }
 
-    return indicator.down({ errors });
+    return indicator.up();
   }
 }

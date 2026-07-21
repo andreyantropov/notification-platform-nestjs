@@ -14,7 +14,7 @@ import { RaceStrategy } from './strategies/race.strategy';
 import { SequentialStrategy } from './strategies/sequential.strategy';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
-import { DeliveryIndicator } from './indicators/delivery.indicator';
+import { ChannelsIndicator } from './indicators/channels.indicator';
 import { BITRIX_CHANNEL, CHANNELS, EMAIL_CHANNEL } from './delivery.constants';
 import { TerminusModule } from '@nestjs/terminus';
 import { Channel } from './channels/channel.abstract';
@@ -100,8 +100,8 @@ const isDev = process.env.NODE_ENV === 'development';
       inject: [BITRIX_CHANNEL, EMAIL_CHANNEL],
       useFactory: (bitrix: Channel, email: Channel) => [bitrix, email],
     },
-    DeliveryIndicator,
+    ChannelsIndicator,
   ],
-  exports: [DeliveryIndicator],
+  exports: [ChannelsIndicator],
 })
 export class DeliveryModule {}

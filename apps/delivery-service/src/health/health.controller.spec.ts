@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { DeliveryIndicator } from '../delivery';
+import { ChannelsIndicator } from '../delivery';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -30,7 +30,7 @@ describe('HealthController', () => {
           },
         },
         {
-          provide: DeliveryIndicator,
+          provide: ChannelsIndicator,
           useValue: {
             isHealthy: mockisHealthy,
           },
@@ -85,7 +85,7 @@ describe('HealthController', () => {
 
       await (passedFunctions[0] as () => Promise<unknown>)();
       expect(mockisHealthy).toHaveBeenCalledTimes(1);
-      expect(mockisHealthy).toHaveBeenCalledWith('delivery-service');
+      expect(mockisHealthy).toHaveBeenCalledWith('channels');
     });
   });
 });

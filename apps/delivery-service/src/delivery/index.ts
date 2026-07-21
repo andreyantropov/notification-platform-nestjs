@@ -1,2 +1,2 @@
 export * from './delivery.module';
-export * from './indicators/delivery.indicator';
+export * from './indicators/channels.indicator';

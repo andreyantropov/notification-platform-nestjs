@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
-import { DeliveryIndicator } from './delivery.indicator';
+import { ChannelsIndicator } from './channels.indicator';
 import { Channel } from '../channels/channel.abstract';
 import { Provider } from '@app/shared';
 import { CHANNELS } from '../delivery.constants';
 
-describe('DeliveryIndicator', () => {
-  let indicator: DeliveryIndicator;
+describe('ChannelsIndicator', () => {
+  let indicator: ChannelsIndicator;
   let mockUp: jest.Mock;
   let mockDown: jest.Mock;
 
@@ -57,7 +57,7 @@ describe('DeliveryIndicator', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        DeliveryIndicator,
+        ChannelsIndicator,
         {
           provide: HealthIndicatorService,
           useValue: mockHealthIndicatorService,
@@ -69,7 +69,7 @@ describe('DeliveryIndicator', () => {
       ],
     }).compile();
 
-    indicator = module.get<DeliveryIndicator>(DeliveryIndicator);
+    indicator = module.get<ChannelsIndicator>(ChannelsIndicator);
   });
 
   afterEach(() => {
