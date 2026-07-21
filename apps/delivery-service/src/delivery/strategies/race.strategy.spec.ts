@@ -16,6 +16,10 @@ describe('RaceStrategy', () => {
     async send(contact: Contact, message: string): Promise<void> {
       return this.sendSpy(contact, message);
     }
+
+    protected async performSend(): Promise<void> {
+      return Promise.resolve();
+    }
   }
 
   const mockNotification: Notification = {

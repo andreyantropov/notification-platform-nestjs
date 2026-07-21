@@ -6,7 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build:receive": "nest build receive-service",
+    "build:delivery": "nest build delivery-service",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start:receive": "cross-env NODE_ENV=production nest start receive-service",
     "start:delivery": "cross-env NODE_ENV=production nest start delivery-service",

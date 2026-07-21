@@ -28,6 +28,18 @@ export class BitrixChannel extends Channel {
     this.timeoutMs = timeoutMs;
   }
 
+  async checkHealth(): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/user.current.json`),
+      );
+    } catch (error) {
+      throw new Error(`Bitrix API недоступен`, {
+        cause: error,
+      });
+    }
+  }
+
   async performSend(contact: Contact, message: string): Promise<void> {
     try {
       await firstValueFrom(
@@ -51,18 +63,6 @@ export class BitrixChannel extends Channel {
       );
     } catch (error) {
       throw new Error(`Не удалось отправить уведомление через Bitrix`, {
-        cause: error,
-      });
-    }
-  }
-
-  async checkHealth(): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/user.current.json`),
-      );
-    } catch (error) {
-      throw new Error(`Bitrix API недоступен`, {
         cause: error,
       });
     }

@@ -24,6 +24,14 @@ export class EmailChannel extends Channel {
     this.timeoutMs = timeoutMs;
   }
 
+  async checkHealth(): Promise<void> {
+    try {
+      await this.mailerService.getTransporter().verify();
+    } catch (error) {
+      throw new Error(`SMTP сервер недоступен`, { cause: error });
+    }
+  }
+
   async performSend(contact: Contact, message: string): Promise<void> {
     try {
       await firstValueFrom(
@@ -40,14 +48,6 @@ export class EmailChannel extends Channel {
       throw new Error(`Не удалось отправить уведомление через Email`, {
         cause: error,
       });
-    }
-  }
-
-  async checkHealth(): Promise<void> {
-    try {
-      await this.mailerService.getTransporter().verify();
-    } catch (error) {
-      throw new Error(`SMTP сервер недоступен`, { cause: error });
     }
   }
 }

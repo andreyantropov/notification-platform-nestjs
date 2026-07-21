@@ -12,20 +12,24 @@ describe('DeliveryIndicator', () => {
 
   class TestEmailChannel extends Channel {
     protected readonly type = Provider.EMAIL;
-    async send(): Promise<void> {
+
+    async checkHealth(): Promise<void> {
       return Promise.resolve();
     }
-    async checkHealth(): Promise<void> {
+
+    protected async performSend(): Promise<void> {
       return Promise.resolve();
     }
   }
 
   class TestBitrixChannel extends Channel {
     protected readonly type = Provider.BITRIX;
-    async send(): Promise<void> {
+
+    async checkHealth(): Promise<void> {
       return Promise.resolve();
     }
-    async checkHealth(): Promise<void> {
+
+    protected async performSend(): Promise<void> {
       return Promise.resolve();
     }
   }

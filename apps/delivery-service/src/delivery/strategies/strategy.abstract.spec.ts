@@ -1,4 +1,4 @@
-import { Strategy, Attempt } from './strategy.abstract';
+import { Strategy } from './strategy.abstract';
 import { Channel } from '../channels/channel.abstract';
 import { Contact, Provider } from '@app/shared';
 
@@ -9,7 +9,7 @@ describe('Strategy', () => {
     public testGetAttempts(
       channels: readonly Channel[],
       contacts: readonly Contact[],
-    ): Attempt[] {
+    ) {
       return this.getAttempts(channels, contacts);
     }
   }
@@ -17,11 +17,17 @@ describe('Strategy', () => {
   class MockEmailChannel extends Channel {
     protected readonly type = Provider.EMAIL;
     async send(): Promise<void> {}
+    protected async performSend(): Promise<void> {
+      return Promise.resolve();
+    }
   }
 
   class MockBitrixChannel extends Channel {
     protected readonly type = Provider.BITRIX;
     async send(): Promise<void> {}
+    protected async performSend(): Promise<void> {
+      return Promise.resolve();
+    }
   }
 
   let strategy: TestableStrategy;

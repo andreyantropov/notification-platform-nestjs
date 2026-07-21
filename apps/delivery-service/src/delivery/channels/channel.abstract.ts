@@ -17,12 +17,12 @@ export abstract class Channel {
     return this.limiter.schedule(() => this.performSend(contact, message));
   }
 
+  async checkHealth(): Promise<void> {
+    return Promise.resolve();
+  }
+
   protected abstract performSend(
     contact: Contact,
     message: string,
   ): Promise<void>;
-
-  async checkHealth(): Promise<void> {
-    return Promise.resolve();
-  }
 }
