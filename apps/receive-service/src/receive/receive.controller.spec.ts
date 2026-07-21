@@ -10,6 +10,8 @@ import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto'
 import { ServerResponse, IncomingMessage } from 'http';
 import { BatchResponse } from './types/batch-response.interface';
 import { Mode, Notification, Provider } from '@app/shared';
+import { AppAuthGuard } from '../auth';
+import { BatchResultStatus } from './types/batch-result-status.enum';
 
 describe('ReceiveController', () => {
   let controller: ReceiveController;
@@ -31,7 +33,12 @@ describe('ReceiveController', () => {
           useValue: serviceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(AppAuthGuard)
+      .useValue({
+        canActivate: () => true,
+      })
+      .compile();
 
     controller = module.get<ReceiveController>(ReceiveController);
   });
@@ -78,7 +85,7 @@ describe('ReceiveController', () => {
 
       const mockBatchResponse: BatchResponse = {
         summary: { total: 1, success: 1, clientError: 0, serverError: 0 },
-        items: [{ status: 'success', data: {} }],
+        items: [{ status: BatchResultStatus.SUCCESS, data: {} }],
       };
 
       serviceMock.receiveBatch.mockResolvedValue(mockBatchResponse);
@@ -119,8 +126,8 @@ describe('ReceiveController', () => {
       const mockBatchResponse: BatchResponse = {
         summary: { total: 2, success: 1, clientError: 1, serverError: 0 },
         items: [
-          { status: 'success', data: {} },
-          { status: 'client_error', data: {}, error: [] },
+          { status: BatchResultStatus.SUCCESS, data: {} },
+          { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
         ],
       };
 
