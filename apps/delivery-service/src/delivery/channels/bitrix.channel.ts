@@ -31,9 +31,16 @@ export class BitrixChannel extends Channel {
   async checkHealth(): Promise<void> {
     try {
       await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/user.current.json`),
+        this.httpService
+          .post<BitrixResponse>(
+            `${this.baseUrl}/server.time.json`,
+            {},
+            { timeout: this.timeoutMs },
+          )
+          .pipe(map((res) => res.data)),
       );
     } catch (error) {
+      console.log(error);
       throw new Error(`Bitrix API недоступен`, {
         cause: error,
       });

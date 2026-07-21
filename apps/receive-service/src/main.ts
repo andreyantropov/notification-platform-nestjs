@@ -15,10 +15,6 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
 
-  app.setGlobalPrefix('api/v1', {
-    exclude: ['health'],
-  });
-
   const config = new DocumentBuilder()
     .setTitle('Notification Platform API')
     .setDescription(
@@ -45,7 +41,7 @@ async function bootstrap(): Promise<void> {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('api/v1/docs', app, document, {
+  SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },

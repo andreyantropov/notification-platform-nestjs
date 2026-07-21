@@ -114,7 +114,9 @@ describe('BitrixChannel', () => {
       await expect(channel.checkHealth()).resolves.not.toThrow();
 
       expect(mockHttpPost).toHaveBeenCalledWith(
-        expect.stringContaining('/user.current.json'),
+        expect.stringContaining('/server.time.json'),
+        expect.any(Object),
+        expect.any(Object),
       );
     });
 

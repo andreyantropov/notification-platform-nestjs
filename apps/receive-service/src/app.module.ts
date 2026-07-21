@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config';
 import { ReceiveModule } from './receive';
 import { HealthModule } from './health';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_PIPE, RouterModule } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -18,6 +18,21 @@ import { APP_PIPE } from '@nestjs/core';
     }),
     ReceiveModule,
     HealthModule,
+    RouterModule.register([
+      {
+        path: 'api/v1',
+        children: [
+          {
+            path: '/',
+            module: ReceiveModule,
+          },
+        ],
+      },
+      {
+        path: '/',
+        module: HealthModule,
+      },
+    ]),
   ],
   providers: [
     {
