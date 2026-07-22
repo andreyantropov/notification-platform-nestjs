@@ -22,8 +22,8 @@ async function bootstrap(): Promise<void> {
 
   setupSwagger(app);
 
-  const configService = app.get(ConfigService);
-  const httpPort = configService.get<number>('PORT')!;
+  const config = app.get(ConfigService);
+  const httpPort = config.getOrThrow<number>('PORT');
   await app.listen(httpPort, '0.0.0.0');
 }
 

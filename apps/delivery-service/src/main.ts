@@ -15,12 +15,12 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const configService = app.get(ConfigService);
+  const config = app.get(ConfigService);
 
-  app.connectMicroservice(getRmqOptions(configService));
+  app.connectMicroservice(getRmqOptions(config));
   await app.startAllMicroservices();
 
-  const httpPort = configService.get<number>('PORT')!;
+  const httpPort = config.getOrThrow<number>('PORT');
   await app.listen(httpPort, '0.0.0.0');
 }
 
