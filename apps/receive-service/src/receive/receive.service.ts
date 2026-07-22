@@ -3,10 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
-import {
-  DELIVERY_NOTIFICATIONS_SEND_QUEUE,
-  RMQ_CLIENT,
-} from './receive.constants';
+import { RMQ_CLIENT } from './receive.constants';
 import { firstValueFrom } from 'rxjs';
 import { plainToInstance } from 'class-transformer';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -14,6 +11,7 @@ import { BatchItemResponse } from './types/batch-item-response.interface';
 import { BatchResponse } from './types/batch-response.interface';
 import { validate } from 'class-validator';
 import { BatchResultStatus } from './types/batch-result-status.enum';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
 
 @Injectable()
 export class ReceiveService {

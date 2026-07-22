@@ -21,7 +21,7 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   const httpPort = configService.get<number>('PORT')!;
-  await app.listen(httpPort);
+  await app.listen(httpPort, '0.0.0.0');
 }
 
 bootstrap().catch(() => {
