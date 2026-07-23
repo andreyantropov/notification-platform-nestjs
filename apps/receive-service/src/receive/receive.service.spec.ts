@@ -7,9 +7,13 @@ import { ClientProxy } from '@nestjs/microservices';
 import { of, throwError } from 'rxjs';
 import { ReceiveService } from './receive.service';
 import { CreateNotification } from './types/create-notification.type';
-import { Notification, Mode, Provider } from '@app/shared';
+import {
+  Notification,
+  Mode,
+  Provider,
+  DELIVERY_NOTIFICATIONS_SEND_QUEUE,
+} from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
-import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
 
 describe('ReceiveService', () => {
   let service: ReceiveService;

@@ -1,4 +1,4 @@
-import { Notification } from '@app/shared';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE, Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
@@ -11,7 +11,7 @@ import { BatchItemResponse } from './types/batch-item-response.interface';
 import { BatchResponse } from './types/batch-response.interface';
 import { validate } from 'class-validator';
 import { BatchResultStatus } from './types/batch-result-status.enum';
-import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
+import { SendNotificationDto } from '@app/shared';
 
 @Injectable()
 export class ReceiveService {
@@ -24,7 +24,7 @@ export class ReceiveService {
     createNotification: CreateNotification,
     clientId: string,
   ): Promise<Notification> {
-    const notification: Notification = {
+    const notification: SendNotificationDto = {
       ...createNotification,
       id: randomUUID(),
       createdAt: new Date().toISOString(),

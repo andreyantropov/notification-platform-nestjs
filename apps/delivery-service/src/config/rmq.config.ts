@@ -1,8 +1,8 @@
 import { Transport } from '@nestjs/microservices';
-import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
 import { registerAs } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { IsUrl, IsNotEmpty, validateSync } from 'class-validator';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '@app/shared';
 
 class Env {
   @IsUrl({ require_tld: false, protocols: ['amqp', 'amqps'] })

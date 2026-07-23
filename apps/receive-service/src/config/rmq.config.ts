@@ -1,4 +1,4 @@
-import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '../app.constants';
+import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '@app/shared';
 import { registerAs } from '@nestjs/config';
 import { RmqOptions, Transport } from '@nestjs/microservices';
 import { plainToInstance } from 'class-transformer';

@@ -23,7 +23,7 @@ class SendNotificationContactDto implements Contact {
   value!: string;
 }
 
-export class SendNotificationCommandDto implements Notification {
+export class SendNotificationDto implements Notification {
   @IsUUID()
   readonly id!: string;
 
