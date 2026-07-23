@@ -1,4 +1,4 @@
-import { Mode } from './mode.enum';
+import { Mode } from '../enums/mode.enum';
 import { Contact } from './contact.interface';
 
 export interface Notification {

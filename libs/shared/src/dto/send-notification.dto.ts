@@ -11,7 +11,10 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
-import { Notification, Mode, Contact, Provider } from '@app/shared';
+import { Mode } from '../enums/mode.enum';
+import { Provider } from '../enums/provider.enum';
+import { Contact } from '../interfaces/contact.interface';
+import { Notification } from '../interfaces/notification.interface';
 
 class SendNotificationContactDto implements Contact {
   @IsEnum(Provider)

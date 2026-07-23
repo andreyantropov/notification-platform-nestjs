@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 import { Mode, Provider } from '@app/shared';
-import { SendNotificationCommandDto } from '../../../../libs/shared/src/send-notification.dto';
+import { SendNotificationCommandDto } from '../../../../libs/shared/src/dto/send-notification.dto';
 import { RmqContext } from '@nestjs/microservices';
 import { Channel, Message } from 'amqplib';
 
