@@ -1,9 +1,9 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { validate } from './config';
 import { ReceiveModule } from './receive';
 import { HealthModule } from './health';
 import { APP_PIPE } from '@nestjs/core';
+import { appConfig, authConfig, rmqConfig } from './config';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { APP_PIPE } from '@nestjs/core';
         `apps/receive-service/.env.${process.env.NODE_ENV}`,
         'apps/receive-service/.env',
       ],
-      validate,
+      load: [appConfig, authConfig, rmqConfig],
     }),
     ReceiveModule,
     HealthModule,

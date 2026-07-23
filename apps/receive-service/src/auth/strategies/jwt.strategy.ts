@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
-import { JwtStrategyConfig } from './jwt.strategy.config';
 import { AuthorizedUser } from '../types/authorized-user.interface';
+import { type ConfigType } from '@nestjs/config';
+import { authConfig } from '../../config';
 
 interface KeycloakJwtPayload {
   readonly azp?: string;
@@ -16,7 +13,10 @@ interface KeycloakJwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor({ audience, issuerUrl, jwksUri }: JwtStrategyConfig) {
+  constructor(
+    @Inject(authConfig.KEY)
+    { audience, issuerUrl, jwksUri }: ConfigType<typeof authConfig>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,

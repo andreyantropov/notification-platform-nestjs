@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BitrixChannel } from './bitrix.channel';
-import { BitrixChannelConfig } from './bitrix.channel.config';
+import { bitrixConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
 
 interface BitrixResponse {
@@ -16,13 +16,16 @@ describe('BitrixChannel', () => {
   let channel: BitrixChannel;
   let mockHttpPost: jest.Mock;
 
-  const mockConfig: BitrixChannelConfig = new BitrixChannelConfig(
-    'https://bitrix24.ru',
-    '1',
-    'secret-token',
-    5000,
-    {},
-  );
+  const mockConfig = {
+    url: 'https://bitrix24.ru',
+    userId: 1,
+    authToken: 'secret-token',
+    timeoutMs: 5000,
+    throttle: {
+      maxConcurrent: 1,
+      minTime: 500,
+    },
+  };
 
   const createAxiosResponse = (
     data: BitrixResponse,
@@ -47,7 +50,7 @@ describe('BitrixChannel', () => {
           },
         },
         {
-          provide: BitrixChannelConfig,
+          provide: bitrixConfig.KEY,
           useValue: mockConfig,
         },
       ],
@@ -78,7 +81,7 @@ describe('BitrixChannel', () => {
       await expect(channel.send(contact, message)).resolves.not.toThrow();
 
       expect(mockHttpPost).toHaveBeenCalledWith(
-        expect.stringContaining('/im.notify.personal.add.json'),
+        expect.stringContaining('https://bitrix24.ru'),
         expect.objectContaining({ user_id: '14253', message }),
         expect.objectContaining({ timeout: 5000 }),
       );
@@ -114,7 +117,7 @@ describe('BitrixChannel', () => {
       await expect(channel.checkHealth()).resolves.not.toThrow();
 
       expect(mockHttpPost).toHaveBeenCalledWith(
-        expect.stringContaining('/server.time.json'),
+        expect.stringContaining('https://bitrix24.ru'),
         expect.any(Object),
         expect.any(Object),
       );

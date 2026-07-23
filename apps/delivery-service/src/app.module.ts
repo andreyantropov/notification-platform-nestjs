@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { validate } from './config';
 import { DeliveryModule } from './delivery';
 import { HealthModule } from './health';
+import {
+  appConfig,
+  axiosConfig,
+  bitrixConfig,
+  emailConfig,
+  rmqConfig,
+  smtpConfig,
+} from './config';
 
 @Module({
   imports: [
@@ -13,7 +20,14 @@ import { HealthModule } from './health';
         `apps/delivery-service/.env.${process.env.NODE_ENV}`,
         'apps/delivery-service/.env',
       ],
-      validate,
+      load: [
+        appConfig,
+        axiosConfig,
+        bitrixConfig,
+        emailConfig,
+        rmqConfig,
+        smtpConfig,
+      ],
     }),
     DeliveryModule,
     HealthModule,

@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { from, firstValueFrom, timeout } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
 import { Channel } from './channel.abstract';
-import { EmailChannelConfig } from './email.channel.config';
+import { emailConfig } from '../../config';
+import { type ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class EmailChannel extends Channel {
@@ -15,7 +16,8 @@ export class EmailChannel extends Channel {
 
   constructor(
     private readonly mailerService: MailerService,
-    { from, subject, timeoutMs, throttle }: EmailChannelConfig,
+    @Inject(emailConfig.KEY)
+    { from, subject, timeoutMs, throttle }: ConfigType<typeof emailConfig>,
   ) {
     super(throttle);
 

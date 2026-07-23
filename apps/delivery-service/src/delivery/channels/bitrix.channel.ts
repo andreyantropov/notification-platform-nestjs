@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
 import { Channel } from './channel.abstract';
-import { BitrixChannelConfig } from './bitrix.channel.config';
+import { bitrixConfig } from '../../config';
+import { type ConfigType } from '@nestjs/config';
 
 interface BitrixResponse {
   readonly result?: unknown;
@@ -20,7 +21,14 @@ export class BitrixChannel extends Channel {
 
   constructor(
     private readonly httpService: HttpService,
-    { url, userId, authToken, timeoutMs, throttle }: BitrixChannelConfig,
+    @Inject(bitrixConfig.KEY)
+    {
+      url,
+      userId,
+      authToken,
+      timeoutMs,
+      throttle,
+    }: ConfigType<typeof bitrixConfig>,
   ) {
     super(throttle);
 

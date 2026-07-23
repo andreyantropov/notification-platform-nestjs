@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { getRmqOptions } from './config';
 import {
   NestFastifyApplication,
   FastifyAdapter,
 } from '@nestjs/platform-fastify';
+import { RmqOptions } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -15,12 +15,14 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const config = app.get(ConfigService);
+  const configService = app.get(ConfigService);
 
-  app.connectMicroservice(getRmqOptions(config));
+  const rmqOptions: RmqOptions = configService.getOrThrow('rmq');
+  app.connectMicroservice(rmqOptions);
+
   await app.startAllMicroservices();
 
-  const httpPort = config.getOrThrow<number>('PORT');
+  const httpPort = configService.getOrThrow<number>('app.port');
   await app.listen(httpPort, '0.0.0.0');
 }
 

@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { BitrixChannel } from './channels/bitrix.channel';
 import { EmailChannel } from './channels/email.channel';
 import { MockBitrixChannel } from './channels/mock-bitrix.channel';
 import { MockEmailChannel } from './channels/mock-email.channel';
-import { BitrixChannelConfig } from './channels/bitrix.channel.config';
-import { EmailChannelConfig } from './channels/email.channel.config';
 import { StrategyFactory } from './strategies/strategy.factory';
 import { BroadcastStrategy } from './strategies/broadcast.strategy';
 import { RaceStrategy } from './strategies/race.strategy';
@@ -18,40 +16,19 @@ import { ChannelsIndicator } from './indicators/channels.indicator';
 import { BITRIX_CHANNEL, CHANNELS, EMAIL_CHANNEL } from './delivery.constants';
 import { TerminusModule } from '@nestjs/terminus';
 import { Channel } from './channels/channel.abstract';
+import { axiosConfig, smtpConfig } from '../config';
 
 const isDev = process.env.NODE_ENV === 'development';
 
 @Module({
   imports: [
     HttpModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        timeout: config.getOrThrow<number>('AXIOS_TIMEOUT_MS'),
-        maxRedirects: 5,
-      }),
+      inject: [axiosConfig.KEY],
+      useFactory: (config: ConfigType<typeof axiosConfig>) => config,
     }),
     MailerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        transport: {
-          host: config.getOrThrow<string>('SMTP_HOST'),
-          port: config.getOrThrow<number>('SMTP_PORT'),
-          secure: config.getOrThrow<boolean>('SMTP_SECURE'),
-          auth: {
-            user: config.getOrThrow<string>('SMTP_USER'),
-            pass: config.getOrThrow<string>('SMTP_PASS'),
-          },
-          greetingTimeout: config.getOrThrow<number>(
-            'SMTP_GREETING_TIMEOUT_MS',
-          ),
-          socketTimeout: config.getOrThrow<number>('SMTP_SOCKET_TIMEOUT_MS'),
-          connectionTimeout: config.getOrThrow<number>(
-            'SMTP_CONNECTION_TIMEOUT_MS',
-          ),
-          pool: true,
-          maxConnections: 5,
-        },
-      }),
+      inject: [smtpConfig.KEY],
+      useFactory: (config: ConfigType<typeof smtpConfig>) => config,
     }),
     TerminusModule,
   ],
@@ -62,35 +39,6 @@ const isDev = process.env.NODE_ENV === 'development';
     BroadcastStrategy,
     RaceStrategy,
     SequentialStrategy,
-    {
-      provide: BitrixChannelConfig,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new BitrixChannelConfig(
-          config.getOrThrow<string>('BITRIX_BASE_URL'),
-          config.getOrThrow<string>('BITRIX_USER_ID'),
-          config.getOrThrow<string>('BITRIX_AUTH_TOKEN'),
-          config.getOrThrow<number>('BITRIX_TIMEOUT_MS'),
-          {
-            maxConcurrent: config.getOrThrow<number>('BITRIX_CONCURRENCY'),
-            minTime: config.getOrThrow<number>('BITRIX_DELAY_MS'),
-          },
-        ),
-    },
-    {
-      provide: EmailChannelConfig,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new EmailChannelConfig(
-          config.getOrThrow<string>('EMAIL_FROM'),
-          config.getOrThrow<string>('EMAIL_SUBJECT'),
-          config.getOrThrow<number>('EMAIL_TIMEOUT_MS'),
-          {
-            maxConcurrent: config.getOrThrow<number>('EMAIL_CONCURRENCY'),
-            minTime: config.getOrThrow<number>('EMAIL_DELAY_MS'),
-          },
-        ),
-    },
     {
       provide: BITRIX_CHANNEL,
       useClass: isDev ? MockBitrixChannel : BitrixChannel,

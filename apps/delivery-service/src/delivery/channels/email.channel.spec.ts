@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EmailChannel } from './email.channel';
-import { EmailChannelConfig } from './email.channel.config';
+import { emailConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
 
 describe('EmailChannel', () => {
@@ -9,12 +9,15 @@ describe('EmailChannel', () => {
   let mockSendMail: jest.Mock;
   let mockVerify: jest.Mock;
 
-  const mockConfig = new EmailChannelConfig(
-    'noreply@test.com',
-    'Test Subject',
-    5000,
-    {},
-  );
+  const mockConfig = {
+    from: 'noreply@test.com',
+    subject: 'Test Subject',
+    timeoutMs: 5000,
+    throttle: {
+      maxConcurrent: 1,
+      minTime: 500,
+    },
+  };
 
   beforeEach(async () => {
     mockSendMail = jest.fn();
@@ -33,7 +36,7 @@ describe('EmailChannel', () => {
           },
         },
         {
-          provide: EmailChannelConfig,
+          provide: emailConfig.KEY,
           useValue: mockConfig,
         },
       ],
