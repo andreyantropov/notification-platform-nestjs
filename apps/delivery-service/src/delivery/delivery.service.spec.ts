@@ -93,5 +93,37 @@ describe('DeliveryService', () => {
       expect(mockGetStrategy).toHaveBeenCalledTimes(1);
       expect(mockStrategyExecute).toHaveBeenCalledTimes(1);
     });
+
+    it('should propagate error if strategy factory fails to find a strategy', async () => {
+      const factoryError = new Error('Unsupported mode');
+      mockGetStrategy.mockImplementation(() => {
+        throw factoryError;
+      });
+
+      await expect(service.deliver(mockNotification)).rejects.toThrow(
+        'Unsupported mode',
+      );
+
+      expect(mockGetStrategy).toHaveBeenCalledTimes(1);
+      expect(mockStrategyExecute).not.toHaveBeenCalled();
+    });
+
+    it('should successfully pass an empty channels list to the strategy if no channels registered', async () => {
+      const localModule = await Test.createTestingModule({
+        providers: [
+          DeliveryService,
+          { provide: StrategyFactory, useValue: { get: mockGetStrategy } },
+          { provide: CHANNELS, useValue: [] },
+        ],
+      }).compile();
+
+      const localService = localModule.get<DeliveryService>(DeliveryService);
+      mockStrategyExecute.mockResolvedValue(undefined);
+
+      await expect(
+        localService.deliver(mockNotification),
+      ).resolves.not.toThrow();
+      expect(mockStrategyExecute).toHaveBeenCalledWith(mockNotification, []);
+    });
   });
 });

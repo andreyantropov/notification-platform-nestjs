@@ -95,7 +95,7 @@ describe('BitrixChannel', () => {
       mockHttpPost.mockReturnValue(of(axiosResponse));
 
       await expect(channel.send(contact, message)).rejects.toThrow(
-        'Не удалось отправить уведомление через Bitrix',
+        'Канал bitrix: Не удалось отправить уведомление',
       );
     });
 
@@ -104,7 +104,7 @@ describe('BitrixChannel', () => {
       mockHttpPost.mockReturnValue(throwError(() => networkError));
 
       await expect(channel.send(contact, message)).rejects.toThrow(
-        'Не удалось отправить уведомление через Bitrix',
+        'Канал bitrix: Не удалось отправить уведомление',
       );
     });
   });
@@ -128,7 +128,7 @@ describe('BitrixChannel', () => {
       mockHttpPost.mockReturnValue(throwError(() => networkError));
 
       await expect(channel.checkHealth()).rejects.toThrow(
-        'Bitrix API недоступен',
+        'Канал bitrix: Bitrix API недоступен',
       );
     });
   });

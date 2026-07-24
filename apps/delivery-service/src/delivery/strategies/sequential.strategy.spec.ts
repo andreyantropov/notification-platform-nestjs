@@ -81,15 +81,29 @@ describe('SequentialStrategy', () => {
       );
     });
 
-    it('should throw an error with attempt count if all channels fail', async () => {
-      emailChannel.sendSpy.mockRejectedValue(new Error('SMTP Error'));
-      bitrixChannel.sendSpy.mockRejectedValue(new Error('Bitrix Error'));
+    it('should throw an error with all aggregated errors in cause if all channels fail', async () => {
+      const emailError = new Error('SMTP Error');
+      const bitrixError = new Error('Bitrix Error');
 
-      await expect(
-        strategy.execute(mockNotification, channels),
-      ).rejects.toThrow(
-        'Все попытки отправки уведомления (2 шт.) завершились неудачей',
+      emailChannel.sendSpy.mockRejectedValue(emailError);
+      bitrixChannel.sendSpy.mockRejectedValue(bitrixError);
+
+      let thrownError: Error | undefined;
+      try {
+        await strategy.execute(mockNotification, channels);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+
+      expect(thrownError).toBeDefined();
+      expect(thrownError?.message).toBe(
+        `Стратегия ${Mode.SEQUENTIAL}: Все попытки отправки уведомления завершились неудачей`,
       );
+
+      expect(thrownError?.cause).toBeInstanceOf(Array);
+      expect(thrownError?.cause).toHaveLength(2);
+      expect((thrownError?.cause as unknown[])[0]).toBe(emailError);
+      expect((thrownError?.cause as unknown[])[1]).toBe(bitrixError);
 
       expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
       expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);

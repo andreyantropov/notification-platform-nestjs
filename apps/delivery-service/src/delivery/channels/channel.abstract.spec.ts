@@ -5,7 +5,7 @@ describe('Channel', () => {
   class TestChannel extends Channel {
     protected readonly type = Provider.EMAIL;
 
-    protected async performSend(): Promise<void> {
+    public async performSend(): Promise<void> {
       return Promise.resolve();
     }
   }
@@ -40,6 +40,31 @@ describe('Channel', () => {
       const message = 'Hello';
 
       await expect(channel.send(contact, message)).resolves.toBeUndefined();
+    });
+
+    it('should route send requests through the limiter to performSend with correct arguments', async () => {
+      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
+      const message = 'Hello';
+
+      const performSendSpy = jest
+        .spyOn(channel, 'performSend')
+        .mockResolvedValue(undefined);
+
+      await expect(channel.send(contact, message)).resolves.toBeUndefined();
+
+      expect(performSendSpy).toHaveBeenCalledTimes(1);
+      expect(performSendSpy).toHaveBeenCalledWith(contact, message);
+    });
+
+    it('should properly bubble up errors thrown by performSend through the limiter', async () => {
+      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
+      const networkError = new Error('SMTP Timeout');
+
+      jest.spyOn(channel, 'performSend').mockRejectedValue(networkError);
+
+      await expect(channel.send(contact, 'Hello')).rejects.toThrow(
+        'SMTP Timeout',
+      );
     });
   });
 });

@@ -79,7 +79,6 @@ export const smtpConfig = registerAs('smtp', (): MailerOptions => {
       socketTimeout: config.SMTP_SOCKET_TIMEOUT_MS,
       connectionTimeout: config.SMTP_CONNECTION_TIMEOUT_MS,
       pool: true,
-      maxConnections: 5,
     },
   };
 });

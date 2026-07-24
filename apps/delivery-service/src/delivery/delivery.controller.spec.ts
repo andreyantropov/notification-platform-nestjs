@@ -2,19 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 import { Mode, Provider } from '@app/shared';
-import { SendNotificationCommandDto } from '../../../../libs/shared/src/dto/send-notification.dto';
+import { SendNotificationDto } from '@app/shared';
 import { RmqContext } from '@nestjs/microservices';
 import { Channel, Message } from 'amqplib';
 
 describe('DeliveryController', () => {
   let controller: DeliveryController;
-  let mockDeliver: jest.Mock<Promise<void>, [SendNotificationCommandDto]>;
+  let mockDeliver: jest.Mock<Promise<void>, [SendNotificationDto]>;
 
-  let mockChannel: jest.Mocked<Partial<Channel>>;
+  let mockChannel: {
+    ack: jest.MockedFn<Channel['ack']>;
+    nack: jest.MockedFn<Channel['nack']>;
+  };
   let mockMessage: jest.Mocked<Partial<Message>>;
   let mockRmqContext: jest.Mocked<Partial<RmqContext>>;
 
-  const mockSendNotificationCommandDto: SendNotificationCommandDto = {
+  const mockSendNotificationDto: SendNotificationDto = {
     id: 'notif-789',
     correlationId: 'corr-789',
     clientId: 'billing-service',
@@ -25,7 +28,7 @@ describe('DeliveryController', () => {
   };
 
   beforeEach(async () => {
-    mockDeliver = jest.fn<Promise<void>, [SendNotificationCommandDto]>();
+    mockDeliver = jest.fn<Promise<void>, [SendNotificationDto]>();
 
     mockChannel = {
       ack: jest.fn(),
@@ -66,13 +69,13 @@ describe('DeliveryController', () => {
 
     await expect(
       controller.handleNotification(
-        mockSendNotificationCommandDto,
+        mockSendNotificationDto,
         mockRmqContext as RmqContext,
       ),
     ).resolves.not.toThrow();
 
     expect(mockDeliver).toHaveBeenCalledTimes(1);
-    expect(mockDeliver).toHaveBeenCalledWith(mockSendNotificationCommandDto);
+    expect(mockDeliver).toHaveBeenCalledWith(mockSendNotificationDto);
 
     expect(mockChannel.ack).toHaveBeenCalledTimes(1);
     expect(mockChannel.ack).toHaveBeenCalledWith(mockMessage);
@@ -89,7 +92,7 @@ describe('DeliveryController', () => {
 
     await expect(
       controller.handleNotification(
-        mockSendNotificationCommandDto,
+        mockSendNotificationDto,
         mockRmqContext as RmqContext,
       ),
     ).resolves.not.toThrow();
@@ -101,5 +104,37 @@ describe('DeliveryController', () => {
     expect(mockChannel.ack).not.toHaveBeenCalled();
 
     consoleSpy.mockRestore();
+  });
+
+  it('should handle crash if channel.ack itself throws an error', async () => {
+    mockDeliver.mockResolvedValue(undefined);
+    mockChannel.ack.mockImplementation(() => {
+      throw new Error('Channel closed');
+    });
+
+    await expect(
+      controller.handleNotification(
+        mockSendNotificationDto,
+        mockRmqContext as RmqContext,
+      ),
+    ).resolves.not.toThrow();
+
+    expect(mockChannel.ack).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle crash if channel.nack itself throws an error on delivery failure', async () => {
+    mockDeliver.mockRejectedValue(new Error('Delivery failed'));
+    mockChannel.nack.mockImplementation(() => {
+      throw new Error('Connection lost');
+    });
+
+    await expect(
+      controller.handleNotification(
+        mockSendNotificationDto,
+        mockRmqContext as RmqContext,
+      ),
+    ).rejects.toThrow('Connection lost');
+
+    expect(mockChannel.nack).toHaveBeenCalledTimes(1);
   });
 });

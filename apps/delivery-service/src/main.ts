@@ -17,9 +17,8 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  const rmqOptions: RmqOptions = configService.getOrThrow('rmq');
+  const rmqOptions = configService.getOrThrow<RmqOptions>('rmq');
   app.connectMicroservice(rmqOptions);
-
   await app.startAllMicroservices();
 
   const httpPort = configService.getOrThrow<number>('app.port');

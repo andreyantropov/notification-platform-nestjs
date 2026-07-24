@@ -14,16 +14,12 @@ describe('Strategy', () => {
     }
   }
 
-  class MockEmailChannel extends Channel {
-    protected readonly type = Provider.EMAIL;
-    async send(): Promise<void> {}
-    protected async performSend(): Promise<void> {
-      return Promise.resolve();
+  class MockChannel extends Channel {
+    protected readonly type: Provider;
+    constructor(type: Provider) {
+      super();
+      this.type = type;
     }
-  }
-
-  class MockBitrixChannel extends Channel {
-    protected readonly type = Provider.BITRIX;
     async send(): Promise<void> {}
     protected async performSend(): Promise<void> {
       return Promise.resolve();
@@ -31,13 +27,13 @@ describe('Strategy', () => {
   }
 
   let strategy: TestableStrategy;
-  let emailChannel: MockEmailChannel;
-  let bitrixChannel: MockBitrixChannel;
+  let emailChannel: MockChannel;
+  let bitrixChannel: MockChannel;
 
   beforeEach(() => {
     strategy = new TestableStrategy();
-    emailChannel = new MockEmailChannel();
-    bitrixChannel = new MockBitrixChannel();
+    emailChannel = new MockChannel(Provider.EMAIL);
+    bitrixChannel = new MockChannel(Provider.BITRIX);
   });
 
   describe('getAttempts', () => {
@@ -80,7 +76,7 @@ describe('Strategy', () => {
         type: Provider.EMAIL,
         value: 'test@email.com',
       };
-      const secondEmailChannel = new MockEmailChannel();
+      const secondEmailChannel = new MockChannel(Provider.EMAIL);
 
       const result = strategy.testGetAttempts(
         [emailChannel, secondEmailChannel],
@@ -90,6 +86,31 @@ describe('Strategy', () => {
       expect(result).toHaveLength(2);
       expect(result[0].channel).toBe(emailChannel);
       expect(result[1].channel).toBe(secondEmailChannel);
+    });
+
+    it('should return an empty array if channels or contacts are empty', () => {
+      const contactEmail: Contact = {
+        type: Provider.EMAIL,
+        value: 'test@email.com',
+      };
+
+      expect(strategy.testGetAttempts([], [contactEmail])).toEqual([]);
+      expect(strategy.testGetAttempts([emailChannel], [])).toEqual([]);
+    });
+
+    it('should group attempts by contacts first, then by channels', () => {
+      const contact1: Contact = { type: Provider.EMAIL, value: 'c1@test.com' };
+      const contact2: Contact = { type: Provider.EMAIL, value: 'c2@test.com' };
+      const ch1 = new MockChannel(Provider.EMAIL);
+      const ch2 = new MockChannel(Provider.EMAIL);
+
+      const result = strategy.testGetAttempts([ch1, ch2], [contact1, contact2]);
+
+      expect(result).toHaveLength(4);
+      expect(result[0]).toEqual({ contact: contact1, channel: ch1 });
+      expect(result[1]).toEqual({ contact: contact1, channel: ch2 });
+      expect(result[2]).toEqual({ contact: contact2, channel: ch1 });
+      expect(result[3]).toEqual({ contact: contact2, channel: ch2 });
     });
   });
 });

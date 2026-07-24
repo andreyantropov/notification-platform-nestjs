@@ -15,15 +15,13 @@ export class ChannelsIndicator {
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const indicator = this.healthIndicatorService.check(key);
-    const errors: string[] = [];
+    const errors = [];
 
     for (const channel of this.channels) {
       try {
         await channel.checkHealth();
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Неизвестная ошибка';
-        errors.push(`${channel.constructor.name}: ${message}`);
+        errors.push(error);
       }
     }
 

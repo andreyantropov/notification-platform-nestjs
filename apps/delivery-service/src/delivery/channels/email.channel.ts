@@ -30,7 +30,9 @@ export class EmailChannel extends Channel {
     try {
       await this.mailerService.getTransporter().verify();
     } catch (error) {
-      throw new Error(`SMTP сервер недоступен`, { cause: error });
+      throw new Error(`Канал ${this.type}: SMTP сервер недоступен`, {
+        cause: error,
+      });
     }
   }
 
@@ -47,7 +49,7 @@ export class EmailChannel extends Channel {
         ).pipe(timeout(this.timeoutMs)),
       );
     } catch (error) {
-      throw new Error(`Не удалось отправить уведомление через Email`, {
+      throw new Error(`Канал ${this.type}: Не удалось отправить уведомление`, {
         cause: error,
       });
     }

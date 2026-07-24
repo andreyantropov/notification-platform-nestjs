@@ -52,6 +52,18 @@ describe('RaceStrategy', () => {
   });
 
   describe('execute', () => {
+    it('should succeed immediately if all channels deliver successfully', async () => {
+      emailChannel.sendSpy.mockResolvedValue(undefined);
+      bitrixChannel.sendSpy.mockResolvedValue(undefined);
+
+      await expect(
+        strategy.execute(mockNotification, channels),
+      ).resolves.not.toThrow();
+
+      expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
+      expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('should succeed if at least one channel delivers successfully', async () => {
       emailChannel.sendSpy.mockRejectedValue(new Error('SMTP Gateway Error'));
       bitrixChannel.sendSpy.mockResolvedValue(undefined);
@@ -73,15 +85,29 @@ describe('RaceStrategy', () => {
       );
     });
 
-    it('should throw an error only when all channels fail', async () => {
-      emailChannel.sendSpy.mockRejectedValue(new Error('SMTP Fatal Error'));
-      bitrixChannel.sendSpy.mockRejectedValue(new Error('Bitrix REST Error'));
+    it('should throw an error with all aggregated causes when all channels fail', async () => {
+      const emailError = new Error('SMTP Fatal Error');
+      const bitrixError = new Error('Bitrix REST Error');
 
-      await expect(
-        strategy.execute(mockNotification, channels),
-      ).rejects.toThrow(
-        'Все попытки отправки уведомления (2 шт.) завершились неудачей',
+      emailChannel.sendSpy.mockRejectedValue(emailError);
+      bitrixChannel.sendSpy.mockRejectedValue(bitrixError);
+
+      let thrownError: Error | undefined;
+      try {
+        await strategy.execute(mockNotification, channels);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+
+      expect(thrownError).toBeDefined();
+      expect(thrownError?.message).toBe(
+        `Стратегия ${Mode.RACE}: Все попытки отправки уведомления завершились неудачей`,
       );
+
+      expect(thrownError?.cause).toBeInstanceOf(Array);
+      expect(thrownError?.cause).toHaveLength(2);
+      expect((thrownError?.cause as unknown[])[0]).toBe(emailError);
+      expect((thrownError?.cause as unknown[])[1]).toBe(bitrixError);
 
       expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
       expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);

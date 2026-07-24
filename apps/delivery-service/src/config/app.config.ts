@@ -20,7 +20,7 @@ class Env {
   @Min(1)
   @Max(65535)
   @Transform(({ value }) => Number(value))
-  PORT = 3000;
+  PORT = 3001;
 }
 
 export const appConfig = registerAs('app', () => {

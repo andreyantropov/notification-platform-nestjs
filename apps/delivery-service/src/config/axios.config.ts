@@ -25,6 +25,5 @@ export const axiosConfig = registerAs('axios', (): HttpModuleOptions => {
 
   return {
     timeout: config.AXIOS_TIMEOUT_MS,
-    maxRedirects: 5,
   };
 });

@@ -87,5 +87,20 @@ describe('HealthController', () => {
       expect(mockisHealthy).toHaveBeenCalledTimes(1);
       expect(mockisHealthy).toHaveBeenCalledWith('channels');
     });
+
+    it('should throw an error if channels indicator fails', async () => {
+      const mockError = new Error('Connection failed');
+      mockisHealthy.mockRejectedValue(mockError);
+
+      mockCheck.mockImplementation(async (indicators) => {
+        const indicatorFn = indicators[0] as () => Promise<unknown>;
+        await indicatorFn();
+
+        return mockHealthyResult;
+      });
+
+      await expect(controller.readiness()).rejects.toThrow('Connection failed');
+      expect(mockisHealthy).toHaveBeenCalledTimes(1);
+    });
   });
 });

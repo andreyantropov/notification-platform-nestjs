@@ -48,8 +48,7 @@ export class BitrixChannel extends Channel {
           .pipe(map((res) => res.data)),
       );
     } catch (error) {
-      console.log(error);
-      throw new Error(`Bitrix API недоступен`, {
+      throw new Error(`Канал ${this.type}: Bitrix API недоступен`, {
         cause: error,
       });
     }
@@ -77,7 +76,7 @@ export class BitrixChannel extends Channel {
           ),
       );
     } catch (error) {
-      throw new Error(`Не удалось отправить уведомление через Bitrix`, {
+      throw new Error(`Канал ${this.type}: Не удалось отправить уведомление`, {
         cause: error,
       });
     }

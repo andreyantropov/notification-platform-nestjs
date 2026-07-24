@@ -82,7 +82,7 @@ describe('EmailChannel', () => {
       mockSendMail.mockRejectedValue(smtpError);
 
       await expect(channel.send(contact, message)).rejects.toThrow(
-        'Не удалось отправить уведомление через Email',
+        'Канал email: Не удалось отправить уведомление',
       );
     });
   });
@@ -99,7 +99,7 @@ describe('EmailChannel', () => {
       mockVerify.mockRejectedValue(new Error('Connection timeout'));
 
       await expect(channel.checkHealth()).rejects.toThrow(
-        'SMTP сервер недоступен',
+        'Канал email: SMTP сервер недоступен',
       );
       expect(mockVerify).toHaveBeenCalledTimes(1);
     });

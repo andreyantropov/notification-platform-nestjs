@@ -71,15 +71,27 @@ describe('BroadcastStrategy', () => {
       );
     });
 
-    it('should throw an error if at least one channel fails', async () => {
-      emailChannel.sendSpy.mockResolvedValue(undefined);
-      bitrixChannel.sendSpy.mockRejectedValue(new Error('Bitrix API Timeout'));
+    it('should throw an error with only failed channels inside cause if at least one channel fails', async () => {
+      const bitrixError = new Error('Bitrix API Timeout');
 
-      await expect(
-        strategy.execute(mockNotification, channels),
-      ).rejects.toThrow(
-        'Один или несколько каналов вернули ошибку во время массовой отправки',
+      emailChannel.sendSpy.mockResolvedValue(undefined);
+      bitrixChannel.sendSpy.mockRejectedValue(bitrixError);
+
+      let thrownError: Error | undefined;
+      try {
+        await strategy.execute(mockNotification, channels);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+
+      expect(thrownError).toBeDefined();
+      expect(thrownError?.message).toBe(
+        `Стратегия ${Mode.BROADCAST}: Одна или несколько попыток отправки уведомления завершились неудачей`,
       );
+
+      expect(thrownError?.cause).toBeInstanceOf(Array);
+      expect(thrownError?.cause).toHaveLength(1);
+      expect((thrownError?.cause as unknown[])[0]).toBe(bitrixError);
 
       expect(emailChannel.sendSpy).toHaveBeenCalledTimes(1);
       expect(bitrixChannel.sendSpy).toHaveBeenCalledTimes(1);

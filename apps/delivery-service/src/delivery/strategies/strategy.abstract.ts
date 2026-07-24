@@ -1,6 +1,5 @@
-import { Contact } from '@app/shared';
+import { Contact, Mode, Notification } from '@app/shared';
 import { Channel } from '../channels/channel.abstract';
-import { Notification } from '@app/shared';
 
 interface Attempt {
   channel: Channel;
@@ -8,6 +7,8 @@ interface Attempt {
 }
 
 export abstract class Strategy {
+  protected abstract readonly type: Mode;
+
   protected getAttempts(
     channels: readonly Channel[],
     contacts: readonly Contact[],

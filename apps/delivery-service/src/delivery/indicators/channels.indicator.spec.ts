@@ -10,11 +10,16 @@ describe('ChannelsIndicator', () => {
   let mockUp: jest.Mock;
   let mockDown: jest.Mock;
 
-  class TestEmailChannel extends Channel {
-    protected readonly type = Provider.EMAIL;
+  class TestChannel extends Channel {
+    constructor(
+      protected readonly type: Provider,
+      public readonly checkHealthSpy: jest.Mock<Promise<void>, []>,
+    ) {
+      super();
+    }
 
     async checkHealth(): Promise<void> {
-      return Promise.resolve();
+      return this.checkHealthSpy();
     }
 
     protected async performSend(): Promise<void> {
@@ -22,35 +27,22 @@ describe('ChannelsIndicator', () => {
     }
   }
 
-  class TestBitrixChannel extends Channel {
-    protected readonly type = Provider.BITRIX;
-
-    async checkHealth(): Promise<void> {
-      return Promise.resolve();
-    }
-
-    protected async performSend(): Promise<void> {
-      return Promise.resolve();
-    }
-  }
-
-  let emailChannel: TestEmailChannel;
-  let bitrixChannel: TestBitrixChannel;
+  let emailSpy: jest.Mock<Promise<void>, []>;
+  let bitrixSpy: jest.Mock<Promise<void>, []>;
   let mockChannelsList: readonly Channel[];
 
   beforeEach(async () => {
     mockUp = jest.fn();
     mockDown = jest.fn();
 
-    emailChannel = new TestEmailChannel();
-    bitrixChannel = new TestBitrixChannel();
+    emailSpy = jest.fn<Promise<void>, []>();
+    bitrixSpy = jest.fn<Promise<void>, []>();
+
+    const emailChannel = new TestChannel(Provider.EMAIL, emailSpy);
+    const bitrixChannel = new TestChannel(Provider.BITRIX, bitrixSpy);
     mockChannelsList = [emailChannel, bitrixChannel];
 
-    const mockIndicatorInstance = {
-      up: mockUp,
-      down: mockDown,
-    };
-
+    const mockIndicatorInstance = { up: mockUp, down: mockDown };
     const mockHealthIndicatorService = {
       check: jest.fn().mockReturnValue(mockIndicatorInstance),
     };
@@ -62,10 +54,7 @@ describe('ChannelsIndicator', () => {
           provide: HealthIndicatorService,
           useValue: mockHealthIndicatorService,
         },
-        {
-          provide: CHANNELS,
-          useValue: mockChannelsList,
-        },
+        { provide: CHANNELS, useValue: mockChannelsList },
       ],
     }).compile();
 
@@ -76,18 +65,11 @@ describe('ChannelsIndicator', () => {
     jest.clearAllMocks();
   });
 
-  describe('constructor', () => {
-    it('should be successfully initialized', () => {
-      expect(indicator).toBeDefined();
-    });
-  });
-
   describe('isHealthy', () => {
     it('should return indicator.up() if all notification channels pass health check', async () => {
       mockUp.mockReturnValue({ gateways: { status: 'up' } });
-
-      jest.spyOn(emailChannel, 'checkHealth').mockResolvedValue(undefined);
-      jest.spyOn(bitrixChannel, 'checkHealth').mockResolvedValue(undefined);
+      emailSpy.mockResolvedValue(undefined);
+      bitrixSpy.mockResolvedValue(undefined);
 
       const result = await indicator.isHealthy('gateways');
 
@@ -96,30 +78,25 @@ describe('ChannelsIndicator', () => {
       expect(mockDown).not.toHaveBeenCalled();
     });
 
-    it('should return indicator.down() with collected errors if at least one channel fails', async () => {
+    it('should return indicator.down() with all collected errors if multiple channels fail', async () => {
+      const emailError = new Error('SMTP Offline');
+      const bitrixError = new Error('Bitrix Timeout');
+
       mockDown.mockReturnValue({
-        gateways: {
-          status: 'down',
-          errors: ['TestBitrixChannel: Bitrix API Gateway Timeout'],
-        },
+        gateways: { status: 'down', errors: [emailError, bitrixError] },
       });
 
-      jest.spyOn(emailChannel, 'checkHealth').mockResolvedValue(undefined);
-      jest
-        .spyOn(bitrixChannel, 'checkHealth')
-        .mockRejectedValue(new Error('Bitrix API Gateway Timeout'));
+      emailSpy.mockRejectedValue(emailError);
+      bitrixSpy.mockRejectedValue(bitrixError);
 
       const result = await indicator.isHealthy('gateways');
 
       expect(result).toEqual({
-        gateways: {
-          status: 'down',
-          errors: ['TestBitrixChannel: Bitrix API Gateway Timeout'],
-        },
+        gateways: { status: 'down', errors: [emailError, bitrixError] },
       });
       expect(mockDown).toHaveBeenCalledTimes(1);
       expect(mockDown).toHaveBeenCalledWith({
-        errors: ['TestBitrixChannel: Bitrix API Gateway Timeout'],
+        errors: [emailError, bitrixError],
       });
       expect(mockUp).not.toHaveBeenCalled();
     });
