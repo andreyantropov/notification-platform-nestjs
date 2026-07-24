@@ -22,7 +22,6 @@ import { NotificationBatchResponseDto } from './dto/notification-batch-response.
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { BatchResultStatus } from './types/batch-result-status.enum';
 import { Mode, Provider } from '@app/shared';
-
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @ApiResponse({
@@ -74,7 +73,6 @@ export class ReceiveController {
               correlationId: 'req-101',
               contacts: [{ type: Provider.BITRIX, value: '205' }],
               message: 'Валидное уведомление',
-              mode: Mode.SEQUENTIAL,
             },
             {
               correlationId: 'req-102',

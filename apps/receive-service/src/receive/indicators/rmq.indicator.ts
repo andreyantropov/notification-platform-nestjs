@@ -18,9 +18,7 @@ export class RmqIndicator {
     try {
       await this.receiveService.checkHealth();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Неизвестная ошибка';
-      return indicator.down({ message });
+      return indicator.down({ error });
     }
 
     return indicator.up();

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DeliveryModule } from './delivery';
 import { HealthModule } from './health';
@@ -10,6 +10,7 @@ import {
   rmqConfig,
   smtpConfig,
 } from './config';
+import { APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -31,6 +32,16 @@ import {
     }),
     DeliveryModule,
     HealthModule,
+  ],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    },
   ],
 })
 export class AppModule {}

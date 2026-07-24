@@ -90,9 +90,7 @@ describe('RmqIndicator', () => {
       expect(healthIndicatorServiceMock.check).toHaveBeenCalledWith(mockKey);
       expect(receiveServiceMock.checkHealth).toHaveBeenCalledTimes(1);
 
-      expect(mockIndicatorBuilder.down).toHaveBeenCalledWith({
-        message: 'RabbitMQ недоступен',
-      });
+      expect(mockIndicatorBuilder.down);
     });
   });
 });

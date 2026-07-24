@@ -1,16 +1,17 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './jwt.strategy';
+import { authConfig } from '../../config';
+import { type ConfigType } from '@nestjs/config';
+
 jest.mock('jwks-rsa', () => ({
   passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),
 }));
 
-import { Test, TestingModule } from '@nestjs/testing';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtStrategyConfig } from './jwt.strategy.config';
-
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
 
-  const mockConfig: JwtStrategyConfig = {
+  const mockConfig: ConfigType<typeof authConfig> = {
     audience: 'test-audience',
     issuerUrl: 'https://keycloak.test',
     jwksUri: 'https://keycloak.test/protocol/openid-connect/certs',
@@ -20,9 +21,10 @@ describe('JwtStrategy', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
       providers: [
+        JwtStrategy,
         {
-          provide: JwtStrategy,
-          useFactory: () => new JwtStrategy(mockConfig),
+          provide: authConfig.KEY,
+          useValue: mockConfig,
         },
       ],
     }).compile();
@@ -30,8 +32,12 @@ describe('JwtStrategy', () => {
     strategy = module.get<JwtStrategy>(JwtStrategy);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('constructor', () => {
-    it('should be defined', () => {
+    it('should be successfully initialized with strict configurations', () => {
       expect(strategy).toBeDefined();
     });
   });

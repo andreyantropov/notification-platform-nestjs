@@ -1,4 +1,4 @@
-import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { DeliveryService } from './delivery.service';
 import { Channel, Message } from 'amqplib';
@@ -12,7 +12,6 @@ export class DeliveryController {
   constructor(private readonly deliveryService: DeliveryService) {}
 
   @EventPattern(DELIVERY_NOTIFICATIONS_SEND_QUEUE)
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async handleNotification(
     @Payload() data: SendNotificationDto,
     @Ctx() context: RmqContext,

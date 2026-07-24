@@ -1,7 +1,3 @@
-jest.mock('uuid', () => ({
-  v4: () => 'mocked-uuid-value',
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClientProxy } from '@nestjs/microservices';
 import { of, throwError } from 'rxjs';
@@ -15,13 +11,18 @@ import {
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
 
+jest.mock('node:crypto', () => ({
+  randomUUID: () => 'mocked-uuid-value',
+}));
+
 describe('ReceiveService', () => {
   let service: ReceiveService;
-  let clientProxyMock: jest.Mocked<Pick<ClientProxy, 'emit'>>;
+  let clientProxyMock: jest.Mocked<Pick<ClientProxy, 'emit' | 'connect'>>;
 
   beforeEach(async () => {
     clientProxyMock = {
       emit: jest.fn().mockReturnValue(of(undefined)),
+      connect: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,8 +72,7 @@ describe('ReceiveService', () => {
       );
       expect(result.clientId).toBe(mockClientId);
 
-      expect(result.id).toBeDefined();
-      expect(typeof result.id).toBe('string');
+      expect(result.id).toBe('mocked-uuid-value');
 
       expect(result.createdAt).toBeDefined();
       expect(new Date(result.createdAt).toString()).not.toBe('Invalid Date');
@@ -108,16 +108,16 @@ describe('ReceiveService', () => {
   });
 
   describe('receiveBatch', () => {
+    const mockClientId = 'client-123';
+
+    const validItem: CreateNotification = {
+      message: 'Valid notification',
+      mode: Mode.SEQUENTIAL,
+      contacts: [{ type: Provider.BITRIX, value: '123' }],
+      correlationId: 'corr-valid',
+    };
+
     it('should process a mix of successful, invalid, and server-error items correctly', async () => {
-      const mockClientId = 'client-123';
-
-      const validItem: CreateNotification = {
-        message: 'Valid notification',
-        mode: Mode.SEQUENTIAL,
-        contacts: [{ type: Provider.BITRIX, value: '123' }],
-        correlationId: 'corr-valid',
-      };
-
       const invalidItem = {
         mode: Mode.SEQUENTIAL,
         contacts: [{ type: Provider.BITRIX, value: '123' }],
@@ -177,23 +177,59 @@ describe('ReceiveService', () => {
 
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
     });
+
+    it('should return 100% success summary when all batch items are valid', async () => {
+      clientProxyMock.emit.mockReturnValue(of(undefined));
+      const items = [validItem, validItem];
+
+      const response = await service.receiveBatch(items, mockClientId);
+
+      expect(response.summary).toEqual({
+        total: 2,
+        success: 2,
+        clientError: 0,
+        serverError: 0,
+      });
+      expect(response.items[0].status).toBe('success');
+      expect(response.items[1].status).toBe('success');
+      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
+    });
+
+    it('should return 100% server error summary when rmq broker completely fails', async () => {
+      const mockError = new Error('RabbitMQ Down');
+      clientProxyMock.emit.mockReturnValue(throwError(() => mockError));
+      const items = [validItem, validItem];
+
+      const response = await service.receiveBatch(items, mockClientId);
+
+      expect(response.summary).toEqual({
+        total: 2,
+        success: 0,
+        clientError: 0,
+        serverError: 2,
+      });
+      expect(response.items[0].status).toBe('server_error');
+      expect(response.items[1].status).toBe('server_error');
+      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('checkHealth', () => {
     it('should resolve successfully when RabbitMQ client connects without errors', async () => {
-      const clientMockWithConnect = clientProxyMock as unknown as Record<
-        string,
-        unknown
-      >;
-
-      const connectSpy = jest.fn().mockResolvedValue(undefined);
-      clientMockWithConnect.connect = connectSpy;
+      clientProxyMock.connect.mockResolvedValue(undefined);
 
       await expect(service.checkHealth()).resolves.not.toThrow();
 
-      expect(connectSpy).toHaveBeenCalledTimes(1);
+      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
+    });
 
-      delete clientMockWithConnect.connect;
+    it('should throw an error during health check if connect fails', async () => {
+      clientProxyMock.connect.mockRejectedValue(new Error('Connection failed'));
+
+      await expect(service.checkHealth()).rejects.toThrow(
+        'RabbitMQ недоступен',
+      );
+      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error if RabbitMQ client is not initialized', async () => {

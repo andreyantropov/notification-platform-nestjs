@@ -1,12 +1,11 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
-import { Request } from 'express';
 import { getClientIdFactory } from './get-client-id.decorator';
 import { AuthorizedUser } from '../types/authorized-user.interface';
 
 describe('GetClientId Decorator Factory', () => {
   const createMockContext = (user?: AuthorizedUser): ExecutionContext => {
-    const mockRequest = { user } as Request & { user?: AuthorizedUser };
+    const mockRequest = { user } as { user?: AuthorizedUser };
 
     const mockHttpArgumentsHost = {
       getRequest: () => mockRequest,
