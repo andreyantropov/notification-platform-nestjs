@@ -5,7 +5,7 @@ import { Strategy } from './strategy.abstract';
 
 @Injectable()
 export class RaceStrategy extends Strategy {
-  readonly type = Mode.RACE;
+  protected readonly type = Mode.RACE;
 
   async execute(
     notification: Notification,

@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class BroadcastStrategy extends Strategy {
-  readonly type = Mode.BROADCAST;
+  protected readonly type = Mode.BROADCAST;
 
   async execute(
     notification: Notification,

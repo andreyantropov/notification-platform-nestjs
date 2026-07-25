@@ -14,7 +14,7 @@ interface BitrixResponse {
 
 @Injectable()
 export class BitrixChannel extends Channel {
-  readonly type = Provider.BITRIX;
+  protected readonly type = Provider.BITRIX;
 
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
@@ -54,7 +54,10 @@ export class BitrixChannel extends Channel {
     }
   }
 
-  async performSend(contact: Contact, message: string): Promise<void> {
+  protected async performSend(
+    contact: Contact,
+    message: string,
+  ): Promise<void> {
     try {
       await firstValueFrom(
         this.httpService

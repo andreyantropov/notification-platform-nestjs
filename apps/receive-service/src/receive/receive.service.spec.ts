@@ -144,7 +144,7 @@ describe('ReceiveService', () => {
 
       const response = await service.receiveBatch(items, mockClientId);
 
-      expect(response.summary).toEqual({
+      expect(response).toEqual({
         total: 3,
         success: 1,
         clientError: 1,
@@ -184,7 +184,7 @@ describe('ReceiveService', () => {
 
       const response = await service.receiveBatch(items, mockClientId);
 
-      expect(response.summary).toEqual({
+      expect(response).toEqual({
         total: 2,
         success: 2,
         clientError: 0,
@@ -202,7 +202,7 @@ describe('ReceiveService', () => {
 
       const response = await service.receiveBatch(items, mockClientId);
 
-      expect(response.summary).toEqual({
+      expect(response).toEqual({
         total: 2,
         success: 0,
         clientError: 0,

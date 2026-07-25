@@ -5,7 +5,7 @@ import { Strategy } from './strategy.abstract';
 
 @Injectable()
 export class SequentialStrategy extends Strategy {
-  readonly type = Mode.SEQUENTIAL;
+  protected readonly type = Mode.SEQUENTIAL;
 
   async execute(
     notification: Notification,

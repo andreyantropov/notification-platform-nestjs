@@ -201,8 +201,7 @@ export class ReceiveController {
     );
 
     const hasErrors =
-      batchResult.summary.clientError > 0 ||
-      batchResult.summary.serverError > 0;
+      batchResult.clientError > 0 || batchResult.serverError > 0;
     res.statusCode = hasErrors ? 207 : 202;
 
     return batchResult;
