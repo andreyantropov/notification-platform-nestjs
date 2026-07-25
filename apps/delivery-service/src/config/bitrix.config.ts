@@ -45,7 +45,7 @@ export const bitrixConfig = registerAs('bitrix', () => {
     enableImplicitConversion: true,
   });
 
-  const errors = validateSync(config, { skipMissingProperties: true });
+  const errors = validateSync(config);
 
   if (errors.length > 0) {
     throw new Error('Не удалось отвалидировать конфиг Bitrix', {

@@ -15,7 +15,7 @@ export const axiosConfig = registerAs('axios', (): HttpModuleOptions => {
     enableImplicitConversion: true,
   });
 
-  const errors = validateSync(config, { skipMissingProperties: true });
+  const errors = validateSync(config);
 
   if (errors.length > 0) {
     throw new Error('Не удалось отвалидировать конфиг Axios', {
