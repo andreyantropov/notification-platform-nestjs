@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationResponseDto } from './notification-response.dto';
 import { BatchResultStatus } from '../types/batch-result-status.enum';
 import { BatchItemResponse } from '../types/batch-item-response.interface';
 import { BatchResponse } from '../types/batch-response.interface';
+import { NotificationResponseDto } from './notification-response.dto';
 
 class NotificationBatchItemResponseDto implements BatchItemResponse {
   @ApiProperty({
@@ -16,9 +16,8 @@ class NotificationBatchItemResponseDto implements BatchItemResponse {
     description:
       'При успехе возвращает обогащенный объект созданного уведомления. При ошибке возвращает исходный объект, присланный клиентом',
     type: NotificationResponseDto,
-    nullable: true,
   })
-  data!: NotificationResponseDto | null;
+  data!: unknown;
 
   @ApiProperty({
     description: 'Текст ошибки валидации или системного сбоя"',
@@ -26,7 +25,7 @@ class NotificationBatchItemResponseDto implements BatchItemResponse {
     nullable: true,
     required: false,
   })
-  error?: string | null;
+  error?: unknown;
 }
 
 export class NotificationBatchResponseDto implements BatchResponse {

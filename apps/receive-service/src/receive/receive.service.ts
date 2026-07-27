@@ -45,7 +45,7 @@ export class ReceiveService {
     const promises = items.map((item) =>
       this.processSingleItem(item, clientId),
     );
-    const settledResults = await Promise.allSettled(promises);
+    const settledResults = await Promise.all(promises);
 
     return this.aggregateBatchResults(settledResults);
   }
@@ -87,13 +87,7 @@ export class ReceiveService {
     }
   }
 
-  private aggregateBatchResults(
-    settledResults: PromiseSettledResult<BatchItemResponse>[],
-  ): BatchResponse {
-    const items = settledResults.map(
-      (res) => (res as PromiseFulfilledResult<BatchItemResponse>).value,
-    );
-
+  private aggregateBatchResults(items: BatchItemResponse[]): BatchResponse {
     const summary = items.reduce(
       (acc, item) => {
         if (item.status === BatchResultStatus.SUCCESS) acc.success++;
