@@ -103,7 +103,10 @@ describe('ReceiveController', () => {
       };
 
       const mockBatchResponse: BatchResponse = {
-        summary: { total: 1, success: 1, clientError: 0, serverError: 0 },
+        total: 1,
+        success: 1,
+        clientError: 0,
+        serverError: 0,
         items: [{ status: BatchResultStatus.SUCCESS, data: {} }],
       };
 
@@ -135,7 +138,10 @@ describe('ReceiveController', () => {
       };
 
       const mockBatchResponse: BatchResponse = {
-        summary: { total: 2, success: 1, clientError: 1, serverError: 0 },
+        total: 2,
+        success: 1,
+        clientError: 1,
+        serverError: 0,
         items: [
           { status: BatchResultStatus.SUCCESS, data: {} },
           { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
@@ -161,7 +167,10 @@ describe('ReceiveController', () => {
       };
 
       const mockBatchResponse: BatchResponse = {
-        summary: { total: 2, success: 0, clientError: 2, serverError: 0 },
+        total: 2,
+        success: 0,
+        clientError: 2,
+        serverError: 0,
         items: [
           { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
           { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },

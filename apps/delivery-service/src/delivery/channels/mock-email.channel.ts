@@ -5,13 +5,16 @@ import { Contact } from '@app/shared';
 
 @Injectable()
 export class MockEmailChannel extends Channel {
-  readonly type = Provider.EMAIL;
+  protected readonly type = Provider.EMAIL;
 
   constructor() {
     super();
   }
 
-  async performSend(contact: Contact, message: string): Promise<void> {
+  protected async performSend(
+    contact: Contact,
+    message: string,
+  ): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 50));
     console.log(`[MOCK EMAIL] To: ${contact.value} | Message: ${message}`);
   }

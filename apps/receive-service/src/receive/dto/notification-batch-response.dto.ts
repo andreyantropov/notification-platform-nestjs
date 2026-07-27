@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NotificationResponseDto } from './notification-response.dto';
 import { BatchResultStatus } from '../types/batch-result-status.enum';
+import { BatchItemResponse } from '../types/batch-item-response.interface';
+import { BatchResponse } from '../types/batch-response.interface';
 
-class NotificationBatchItemResponseDto {
+class NotificationBatchItemResponseDto implements BatchItemResponse {
   @ApiProperty({
     description: 'Статус обработки конкретного уведомления в пакете',
     enum: BatchResultStatus,
@@ -27,7 +29,7 @@ class NotificationBatchItemResponseDto {
   error?: string | null;
 }
 
-export class NotificationBatchResponseDto {
+export class NotificationBatchResponseDto implements BatchResponse {
   @ApiProperty({
     description: 'Общее количество переданных в пакете уведомлений',
     example: 3,

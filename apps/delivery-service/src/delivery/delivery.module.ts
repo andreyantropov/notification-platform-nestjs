@@ -16,9 +16,8 @@ import { ChannelsIndicator } from './indicators/channels.indicator';
 import { BITRIX_CHANNEL, CHANNELS, EMAIL_CHANNEL } from './delivery.constants';
 import { TerminusModule } from '@nestjs/terminus';
 import { Channel } from './channels/channel.abstract';
-import { axiosConfig, smtpConfig } from '../config';
-
-const isDev = process.env.NODE_ENV === 'development';
+import { appConfig, axiosConfig, smtpConfig } from '../config';
+import { Environment } from '@app/shared';
 
 @Module({
   imports: [
@@ -39,13 +38,35 @@ const isDev = process.env.NODE_ENV === 'development';
     BroadcastStrategy,
     RaceStrategy,
     SequentialStrategy,
+    BitrixChannel,
+    MockBitrixChannel,
+    EmailChannel,
+    MockEmailChannel,
     {
       provide: BITRIX_CHANNEL,
-      useClass: isDev ? MockBitrixChannel : BitrixChannel,
+      inject: [appConfig.KEY, MockBitrixChannel, BitrixChannel],
+      useFactory: (
+        config: ConfigType<typeof appConfig>,
+        mockBitrixChannel: MockBitrixChannel,
+        bitrixChannel: BitrixChannel,
+      ) => {
+        return config.nodeEnv === Environment.DEVELOPMENT
+          ? mockBitrixChannel
+          : bitrixChannel;
+      },
     },
     {
       provide: EMAIL_CHANNEL,
-      useClass: isDev ? MockEmailChannel : EmailChannel,
+      inject: [appConfig.KEY, MockEmailChannel, EmailChannel],
+      useFactory: (
+        config: ConfigType<typeof appConfig>,
+        mockEmailChannel: MockEmailChannel,
+        emailChannel: EmailChannel,
+      ) => {
+        return config.nodeEnv === Environment.DEVELOPMENT
+          ? mockEmailChannel
+          : emailChannel;
+      },
     },
     {
       provide: CHANNELS,

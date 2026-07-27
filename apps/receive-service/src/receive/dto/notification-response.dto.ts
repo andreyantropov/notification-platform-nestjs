@@ -1,8 +1,8 @@
-import { Contact, Mode } from '@app/shared';
+import { Contact, Mode, Notification } from '@app/shared';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateNotificationContactDto } from './create-notification-contact.dto';
 
-export class NotificationResponseDto {
+export class NotificationResponseDto implements Notification {
   @ApiProperty({
     example: '764b815a-9694-4d1a-bf41-692e92ec4cb8',
     description:

@@ -13,7 +13,7 @@ import {
 class Env {
   @IsEnum(Environment)
   @IsOptional()
-  NODE_ENV: Environment = Environment.Development;
+  NODE_ENV: Environment = Environment.DEVELOPMENT;
 
   @IsNumber()
   @IsOptional()
@@ -28,7 +28,7 @@ export const appConfig = registerAs('app', () => {
     enableImplicitConversion: true,
   });
 
-  const errors = validateSync(config, { skipMissingProperties: true });
+  const errors = validateSync(config);
 
   if (errors.length > 0) {
     throw new Error('Не удалось отвалидировать конфиг App', {

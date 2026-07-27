@@ -90,38 +90,21 @@ export class ReceiveService {
   private aggregateBatchResults(
     settledResults: PromiseSettledResult<BatchItemResponse>[],
   ): BatchResponse {
-    const results: BatchItemResponse[] = [];
-    let success = 0;
-    let clientError = 0;
-    let serverError = 0;
+    const items = settledResults.map(
+      (res) => (res as PromiseFulfilledResult<BatchItemResponse>).value,
+    );
 
-    for (const settledResult of settledResults) {
-      if (settledResult.status === 'fulfilled') {
-        const itemResult = settledResult.value;
-        results.push(itemResult);
-
-        if (itemResult.status === BatchResultStatus.SUCCESS) success++;
-        if (itemResult.status === BatchResultStatus.CLIENT_ERROR) clientError++;
-        if (itemResult.status === BatchResultStatus.SERVER_ERROR) serverError++;
-      } else {
-        serverError++;
-        results.push({
-          status: BatchResultStatus.SERVER_ERROR,
-          data: null,
-          error: 'Internal Error',
-        });
-      }
-    }
-
-    return {
-      summary: {
-        total: settledResults.length,
-        success,
-        clientError,
-        serverError,
+    const summary = items.reduce(
+      (acc, item) => {
+        if (item.status === BatchResultStatus.SUCCESS) acc.success++;
+        if (item.status === BatchResultStatus.CLIENT_ERROR) acc.clientError++;
+        if (item.status === BatchResultStatus.SERVER_ERROR) acc.serverError++;
+        return acc;
       },
-      items: results,
-    };
+      { total: items.length, success: 0, clientError: 0, serverError: 0 },
+    );
+
+    return { ...summary, items };
   }
 
   async checkHealth(): Promise<void> {

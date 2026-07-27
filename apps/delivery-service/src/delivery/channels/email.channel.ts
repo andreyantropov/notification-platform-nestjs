@@ -8,7 +8,7 @@ import { type ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class EmailChannel extends Channel {
-  readonly type = Provider.EMAIL;
+  protected readonly type = Provider.EMAIL;
 
   private readonly from: string;
   private readonly subject: string;
@@ -36,7 +36,10 @@ export class EmailChannel extends Channel {
     }
   }
 
-  async performSend(contact: Contact, message: string): Promise<void> {
+  protected async performSend(
+    contact: Contact,
+    message: string,
+  ): Promise<void> {
     try {
       await firstValueFrom(
         from(

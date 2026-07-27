@@ -5,16 +5,28 @@ import { MockJwtAuthGuard } from './guards/mock-jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AUTH_GUARD } from './auth.constants';
 import { AppAuthGuard } from './guards/app-auth.guard';
-
-const isDev = process.env.NODE_ENV === 'development';
+import { Environment } from '@app/shared';
+import { appConfig } from '../config';
+import { ConfigType } from '@nestjs/config';
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
   providers: [
     JwtStrategy,
+    MockJwtAuthGuard,
+    JwtAuthGuard,
     {
       provide: AUTH_GUARD,
-      useClass: isDev ? MockJwtAuthGuard : JwtAuthGuard,
+      inject: [appConfig.KEY, MockJwtAuthGuard, JwtAuthGuard],
+      useFactory: (
+        config: ConfigType<typeof appConfig>,
+        mockJwtAuthGuard: MockJwtAuthGuard,
+        jwtAuthGuard: JwtAuthGuard,
+      ) => {
+        return config.nodeEnv === Environment.DEVELOPMENT
+          ? mockJwtAuthGuard
+          : jwtAuthGuard;
+      },
     },
     AppAuthGuard,
   ],
