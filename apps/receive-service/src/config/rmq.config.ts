@@ -1,6 +1,6 @@
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '@app/shared';
 import { registerAs } from '@nestjs/config';
-import { RmqOptions, Transport } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 import { plainToInstance } from 'class-transformer';
 import { IsUrl, IsNotEmpty, validateSync } from 'class-validator';
 
@@ -10,7 +10,7 @@ class Env {
   RABBITMQ_URL!: string;
 }
 
-export const rmqConfig = registerAs('rmq', (): RmqOptions => {
+export const rmqConfig = registerAs('rmq', () => {
   const config = plainToInstance(Env, process.env, {
     enableImplicitConversion: true,
   });
@@ -24,7 +24,7 @@ export const rmqConfig = registerAs('rmq', (): RmqOptions => {
   }
 
   return {
-    transport: Transport.RMQ,
+    transport: Transport.RMQ as const,
     options: {
       urls: [config.RABBITMQ_URL],
       queue: DELIVERY_NOTIFICATIONS_SEND_QUEUE,

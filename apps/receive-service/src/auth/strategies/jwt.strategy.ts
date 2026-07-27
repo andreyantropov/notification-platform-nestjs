@@ -26,6 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 20,
+        cacheMaxAge: 24 * 60 * 60 * 1000,
+        timeout: 5000,
         jwksUri: jwksUri,
       }),
     });

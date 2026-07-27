@@ -1,4 +1,3 @@
-import { MailerOptions } from '@nestjs-modules/mailer';
 import { registerAs } from '@nestjs/config';
 import { plainToInstance, Transform } from 'class-transformer';
 import {
@@ -53,7 +52,7 @@ class Env {
   SMTP_CONNECTION_TIMEOUT_MS = 5_000;
 }
 
-export const smtpConfig = registerAs('smtp', (): MailerOptions => {
+export const smtpConfig = registerAs('smtp', () => {
   const config = plainToInstance(Env, process.env, {
     enableImplicitConversion: true,
   });

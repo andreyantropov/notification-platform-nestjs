@@ -1,7 +1,7 @@
 import {
   createParamDecorator,
   ExecutionContext,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthorizedUser } from '../types/authorized-user.interface';
 
@@ -14,7 +14,7 @@ export const getClientIdFactory = (
   const clientId = request.user?.clientId;
 
   if (!clientId) {
-    throw new UnauthorizedException('В запросе отсутствует id клиента');
+    throw new ForbiddenException('В токене отсутствует id клиента');
   }
 
   return clientId;

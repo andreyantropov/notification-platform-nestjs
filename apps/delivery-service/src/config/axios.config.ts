@@ -1,4 +1,3 @@
-import { HttpModuleOptions } from '@nestjs/axios';
 import { registerAs } from '@nestjs/config';
 import { plainToInstance, Transform } from 'class-transformer';
 import { IsNumber, IsOptional, validateSync } from 'class-validator';
@@ -10,7 +9,7 @@ class Env {
   AXIOS_TIMEOUT_MS = 30_000;
 }
 
-export const axiosConfig = registerAs('axios', (): HttpModuleOptions => {
+export const axiosConfig = registerAs('axios', () => {
   const config = plainToInstance(Env, process.env, {
     enableImplicitConversion: true,
   });

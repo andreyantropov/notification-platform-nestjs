@@ -1,4 +1,4 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { getClientIdFactory } from './get-client-id.decorator';
 import { AuthorizedUser } from '../types/authorized-user.interface';
@@ -40,10 +40,10 @@ describe('GetClientId Decorator Factory', () => {
     const mockContext = createMockContext(undefined);
 
     expect(() => getClientIdFactory(null, mockContext)).toThrow(
-      UnauthorizedException,
+      ForbiddenException,
     );
     expect(() => getClientIdFactory(null, mockContext)).toThrow(
-      'В запросе отсутствует id клиента',
+      'В токене отсутствует id клиента',
     );
   });
 
@@ -52,10 +52,10 @@ describe('GetClientId Decorator Factory', () => {
     const mockContext = createMockContext(mockUserWithoutClientId);
 
     expect(() => getClientIdFactory(null, mockContext)).toThrow(
-      UnauthorizedException,
+      ForbiddenException,
     );
     expect(() => getClientIdFactory(null, mockContext)).toThrow(
-      'В запросе отсутствует id клиента',
+      'В токене отсутствует id клиента',
     );
   });
 });
