@@ -4,6 +4,7 @@ import { ReceiveModule } from './receive';
 import { HealthModule } from './health';
 import { APP_PIPE } from '@nestjs/core';
 import { appConfig, authConfig, rmqConfig } from './config';
+import { OpenTelemetryModule } from 'nestjs-otel';
 
 @Module({
   imports: [
@@ -15,6 +16,11 @@ import { appConfig, authConfig, rmqConfig } from './config';
         'apps/receive-service/.env',
       ],
       load: [appConfig, authConfig, rmqConfig],
+    }),
+    OpenTelemetryModule.forRoot({
+      metrics: {
+        hostMetrics: true,
+      },
     }),
     ReceiveModule,
     HealthModule,

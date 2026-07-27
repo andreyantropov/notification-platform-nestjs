@@ -25,9 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
         rateLimit: true,
-        jwksRequestsPerMinute: 20,
-        cacheMaxAge: 24 * 60 * 60 * 1000,
-        timeout: 5000,
+        jwksRequestsPerMinute: 10,
+        cacheMaxAge: 15 * 60 * 1_000,
+        timeout: 5_000,
         jwksUri: jwksUri,
       }),
     });

@@ -12,7 +12,7 @@ describe('EmailChannel', () => {
   const mockConfig = {
     from: 'noreply@test.com',
     subject: 'Test Subject',
-    timeoutMs: 5000,
+    timeoutMs: 5_000,
     throttle: {
       maxConcurrent: 1,
       minTime: 500,

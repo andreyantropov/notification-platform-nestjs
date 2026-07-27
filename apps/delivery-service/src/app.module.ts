@@ -11,6 +11,7 @@ import {
   smtpConfig,
 } from './config';
 import { APP_PIPE } from '@nestjs/core';
+import { OpenTelemetryModule } from 'nestjs-otel';
 
 @Module({
   imports: [
@@ -29,6 +30,11 @@ import { APP_PIPE } from '@nestjs/core';
         rmqConfig,
         smtpConfig,
       ],
+    }),
+    OpenTelemetryModule.forRoot({
+      metrics: {
+        hostMetrics: true,
+      },
     }),
     DeliveryModule,
     HealthModule,

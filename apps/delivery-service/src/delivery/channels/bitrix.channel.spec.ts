@@ -20,7 +20,7 @@ describe('BitrixChannel', () => {
     url: 'https://bitrix24.ru',
     userId: 1,
     authToken: 'secret-token',
-    timeoutMs: 5000,
+    timeoutMs: 5_000,
     throttle: {
       maxConcurrent: 1,
       minTime: 500,
@@ -83,7 +83,7 @@ describe('BitrixChannel', () => {
       expect(mockHttpPost).toHaveBeenCalledWith(
         expect.stringContaining('https://bitrix24.ru'),
         expect.objectContaining({ user_id: '14253', message }),
-        expect.objectContaining({ timeout: 5000 }),
+        expect.objectContaining({ timeout: 5_000 }),
       );
     });
 
