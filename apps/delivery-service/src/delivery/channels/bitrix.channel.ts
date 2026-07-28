@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
-import { Contact, Provider } from '@app/shared';
+import { type Contact, Provider } from '@app/shared';
 import { Channel } from './channel.abstract';
 import { bitrixConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
+import { OtelMethodCounter } from 'nestjs-otel';
 
 interface BitrixResponse {
   readonly result?: unknown;
@@ -54,6 +55,7 @@ export class BitrixChannel extends Channel {
     }
   }
 
+  @OtelMethodCounter()
   protected async performSend(
     contact: Contact,
     message: string,

@@ -1,11 +1,12 @@
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE, Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateNotification } from './types/create-notification.type';
+import { type CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
 import { RMQ_CLIENT } from './receive.constants';
 import { firstValueFrom } from 'rxjs';
 import { SendNotificationDto } from '@app/shared';
+import { OtelMethodCounter } from 'nestjs-otel';
 
 @Injectable()
 export class ReceiveService {
@@ -14,6 +15,7 @@ export class ReceiveService {
     private readonly rmqClient: ClientProxy,
   ) {}
 
+  @OtelMethodCounter()
   async receive(
     createNotification: CreateNotification,
     clientId: string,

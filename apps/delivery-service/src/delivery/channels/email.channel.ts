@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { from, firstValueFrom, timeout } from 'rxjs';
-import { Contact, Provider } from '@app/shared';
+import { type Contact, Provider } from '@app/shared';
 import { Channel } from './channel.abstract';
 import { emailConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
+import { OtelMethodCounter } from 'nestjs-otel';
 
 @Injectable()
 export class EmailChannel extends Channel {
@@ -36,6 +37,7 @@ export class EmailChannel extends Channel {
     }
   }
 
+  @OtelMethodCounter()
   protected async performSend(
     contact: Contact,
     message: string,
