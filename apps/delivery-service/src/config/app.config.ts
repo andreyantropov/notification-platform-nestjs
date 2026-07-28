@@ -1,4 +1,4 @@
-import { Environment } from '@app/shared';
+import { Environment, LogLevel } from '@app/shared';
 import { registerAs } from '@nestjs/config';
 import { plainToInstance, Transform } from 'class-transformer';
 import {
@@ -21,6 +21,10 @@ class Env {
   @Max(65535)
   @Transform(({ value }) => Number(value))
   PORT = 3001;
+
+  @IsEnum(LogLevel)
+  @IsOptional()
+  LOG_LEVEL: LogLevel = LogLevel.INFO;
 }
 
 export const appConfig = registerAs('app', () => {
@@ -39,5 +43,6 @@ export const appConfig = registerAs('app', () => {
   return {
     nodeEnv: config.NODE_ENV,
     port: config.PORT,
+    logLevel: config.LOG_LEVEL,
   };
 });
