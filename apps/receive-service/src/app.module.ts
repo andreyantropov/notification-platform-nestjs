@@ -5,6 +5,7 @@ import { HealthModule } from './health';
 import { APP_PIPE } from '@nestjs/core';
 import { appConfig, authConfig, rmqConfig } from './config';
 import { OpenTelemetryModule } from 'nestjs-otel';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { OpenTelemetryModule } from 'nestjs-otel';
       load: [appConfig, authConfig, rmqConfig],
     }),
     OpenTelemetryModule.forRoot({}),
+    LoggerModule.forRoot({}),
     ReceiveModule,
     HealthModule,
   ],

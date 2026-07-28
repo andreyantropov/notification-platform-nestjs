@@ -12,6 +12,7 @@ import {
 } from './config';
 import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OpenTelemetryModule } from 'nestjs-otel';
       ],
     }),
     OpenTelemetryModule.forRoot({}),
+    LoggerModule.forRoot({}),
     DeliveryModule,
     HealthModule,
   ],
