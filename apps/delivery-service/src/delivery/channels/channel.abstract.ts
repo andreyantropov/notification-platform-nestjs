@@ -14,7 +14,9 @@ export abstract class Channel {
   }
 
   async send(contact: Contact, message: string): Promise<void> {
-    await this.limiter.schedule(() => this.performSend(contact, message));
+    await this.limiter.schedule(
+      async () => await this.performSend(contact, message),
+    );
   }
 
   async checkHealth(): Promise<void> {
