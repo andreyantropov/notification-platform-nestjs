@@ -9,7 +9,7 @@ export class CreateNotificationContactDto implements Contact {
     description: 'Тип канала отправки',
   })
   @IsEnum(Provider)
-  type!: Provider;
+  readonly type!: Provider;
 
   @ApiProperty({
     example: '205',
@@ -19,5 +19,5 @@ export class CreateNotificationContactDto implements Contact {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  value!: string;
+  readonly value!: string;
 }

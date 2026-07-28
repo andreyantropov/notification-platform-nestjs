@@ -10,7 +10,6 @@ import {
   DELIVERY_NOTIFICATIONS_SEND_QUEUE,
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
-import { BatchResultStatus } from './types/batch-result-status.enum';
 import { Logger } from '@nestjs/common';
 
 jest.mock('node:crypto', () => ({
@@ -58,12 +57,7 @@ describe('ReceiveService', () => {
       const mockCreateNotificationDto: CreateNotification = {
         message: 'Hello, World!',
         mode: Mode.SEQUENTIAL,
-        contacts: [
-          {
-            type: Provider.BITRIX,
-            value: '123',
-          },
-        ],
+        contacts: [{ type: Provider.BITRIX, value: '123' }],
         correlationId: 'corr-456',
       };
 
@@ -111,163 +105,90 @@ describe('ReceiveService', () => {
   describe('receiveBatch', () => {
     const mockClientId = 'client-123';
 
-    const validItem: CreateNotification = {
-      message: 'Valid notification',
+    const validItem1: CreateNotification = {
+      message: 'Notification 1',
       mode: Mode.SEQUENTIAL,
       contacts: [{ type: Provider.BITRIX, value: '123' }],
-      correlationId: 'corr-valid',
+      correlationId: 'corr-1',
     };
 
-    it('should process a mix of successful, invalid, and server-error items correctly', async () => {
-      const invalidItem = {
-        mode: Mode.SEQUENTIAL,
-        contacts: [{ type: Provider.BITRIX, value: '123' }],
-        correlationId: 'corr-invalid',
-      };
+    const validItem2: CreateNotification = {
+      message: 'Notification 2',
+      mode: Mode.BROADCAST,
+      contacts: [{ type: Provider.EMAIL, value: 'test@test.com' }],
+      correlationId: 'corr-2',
+    };
 
-      const serverErrorItem: CreateNotification = {
-        message: 'Triggers server error',
-        mode: Mode.SEQUENTIAL,
-        contacts: [{ type: Provider.BITRIX, value: '123' }],
-        correlationId: 'corr-server-error',
-      };
+    it('should successfully process all items in the batch concurrently', async () => {
+      clientProxyMock.emit.mockReturnValue(of(undefined));
+      const items: readonly CreateNotification[] = [validItem1, validItem2];
 
-      const items: readonly unknown[] = [
-        validItem,
-        invalidItem,
-        serverErrorItem,
-      ];
+      const response = await service.receiveBatch(items, mockClientId);
 
-      const mockError = new Error('RMQ Internal Error');
+      expect(response).toHaveLength(2);
+
+      expect(response[0].id).toBe('mocked-uuid-value');
+      expect(response[0].message).toBe(validItem1.message);
+      expect(response[0].clientId).toBe(mockClientId);
+      expect(response[0].createdAt).toBeDefined();
+
+      expect(response[1].id).toBe('mocked-uuid-value');
+      expect(response[1].message).toBe(validItem2.message);
+      expect(response[1].clientId).toBe(mockClientId);
+
+      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
+      expect(clientProxyMock.emit).toHaveBeenNthCalledWith(
+        1,
+        DELIVERY_NOTIFICATIONS_SEND_QUEUE,
+        response[0],
+      );
+      expect(clientProxyMock.emit).toHaveBeenNthCalledWith(
+        2,
+        DELIVERY_NOTIFICATIONS_SEND_QUEUE,
+        response[1],
+      );
+    });
+
+    it('should fail entirely if at least one item in Promise.all fails to emit', async () => {
+      const mockError = new Error('RMQ Connection Lost During Batch');
+
       clientProxyMock.emit
         .mockReturnValueOnce(of(undefined))
         .mockReturnValueOnce(throwError(() => mockError));
 
-      const response = await service.receiveBatch(items, mockClientId);
+      const items: readonly CreateNotification[] = [validItem1, validItem2];
 
-      expect(response.total).toBe(3);
-      expect(response.success).toBe(1);
-      expect(response.clientError).toBe(1);
-      expect(response.serverError).toBe(1);
-      expect(response.items).toHaveLength(3);
+      await expect(service.receiveBatch(items, mockClientId)).rejects.toThrow(
+        'RMQ Connection Lost During Batch',
+      );
 
-      const successItem = response.items[0];
-      expect(successItem.status).toBe(BatchResultStatus.SUCCESS);
-
-      const successData = successItem.data as Notification;
-      expect(successData.id).toBe('mocked-uuid-value');
-      expect(successData.clientId).toBe(mockClientId);
-      expect(successData.message).toBe(validItem.message);
-      expect(successData.mode).toBe(validItem.mode);
-      expect(successData.correlationId).toBe(validItem.correlationId);
-      expect(typeof successData.createdAt).toBe('string');
-
-      expect(successData.contacts).toHaveLength(1);
-      expect(successData.contacts[0].type).toBe(Provider.BITRIX);
-      expect(successData.contacts[0].value).toBe('123');
-
-      const clientErrorItemResult = response.items[1];
-      expect(clientErrorItemResult.status).toBe(BatchResultStatus.CLIENT_ERROR);
-      expect(clientErrorItemResult.data).toEqual(invalidItem);
-
-      const validationErrors = clientErrorItemResult.error as Array<{
-        property: string;
-        constraints: Record<string, string>;
-      }>;
-      expect(validationErrors).toEqual([
-        {
-          property: 'message',
-          constraints: {
-            isNotEmpty: 'message should not be empty',
-            isString: 'message must be a string',
-            maxLength:
-              'message must be shorter than or equal to 1024 characters',
-          },
-        },
-      ]);
-
-      expect(response.items[2]).toEqual({
-        status: BatchResultStatus.SERVER_ERROR,
-        data: serverErrorItem,
-        error: 'Internal Error',
-      });
-
-      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
-    });
-
-    it('should return 100% success summary when all batch items are valid', async () => {
-      clientProxyMock.emit.mockReturnValue(of(undefined));
-      const items = [validItem, validItem];
-
-      const response = await service.receiveBatch(items, mockClientId);
-
-      expect(response.total).toBe(2);
-      expect(response.success).toBe(2);
-      expect(response.clientError).toBe(0);
-      expect(response.serverError).toBe(0);
-
-      expect(response.items[0].status).toBe(BatchResultStatus.SUCCESS);
-      expect(response.items[1].status).toBe(BatchResultStatus.SUCCESS);
-      expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
-    });
-
-    it('should return 100% server error summary when rmq broker completely fails', async () => {
-      const mockError = new Error('RabbitMQ Down');
-      clientProxyMock.emit.mockReturnValue(throwError(() => mockError));
-      const items = [validItem, validItem];
-
-      const response = await service.receiveBatch(items, mockClientId);
-
-      expect(response.total).toBe(2);
-      expect(response.success).toBe(0);
-      expect(response.clientError).toBe(0);
-      expect(response.serverError).toBe(2);
-
-      expect(response.items[0].status).toBe(BatchResultStatus.SERVER_ERROR);
-      expect(response.items[1].status).toBe(BatchResultStatus.SERVER_ERROR);
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('checkHealth', () => {
-    it('should resolve successfully when RabbitMQ client connects without errors', async () => {
-      clientProxyMock.connect.mockResolvedValue(undefined);
-
+    it('should successfully connect to RabbitMQ', async () => {
       await expect(service.checkHealth()).resolves.not.toThrow();
-
       expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error during health check if connect fails', async () => {
-      clientProxyMock.connect.mockRejectedValue(new Error('Connection failed'));
+    it('should throw an error with cause if connect fails', async () => {
+      const mockError = new Error('Connection refused');
+      clientProxyMock.connect.mockRejectedValue(mockError);
 
       await expect(service.checkHealth()).rejects.toThrow(
         'RabbitMQ недоступен',
       );
-      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
-    });
 
-    it('should throw an error if RabbitMQ client is not initialized', async () => {
-      const moduleWithoutClient: TestingModule = await Test.createTestingModule(
-        {
-          providers: [
-            ReceiveService,
-            {
-              provide: RMQ_CLIENT,
-              useValue: {
-                connect: jest.fn().mockRejectedValue(new Error('No client')),
-              },
-            },
-          ],
-        },
-      ).compile();
-
-      const serviceWithoutClient =
-        moduleWithoutClient.get<ReceiveService>(ReceiveService);
-
-      await expect(serviceWithoutClient.checkHealth()).rejects.toThrow(
-        'RabbitMQ недоступен',
-      );
+      try {
+        await service.checkHealth();
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          expect(error.cause).toBe(mockError);
+        } else {
+          fail('Ошибка должна быть экземпляром класса Error');
+        }
+      }
     });
   });
 });

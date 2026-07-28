@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ArrayMinSize, ArrayMaxSize } from 'class-validator';
+import {
+  IsArray,
+  ArrayMinSize,
+  ArrayMaxSize,
+  ValidateNested,
+} from 'class-validator';
 import { CreateNotificationDto } from './create-notification.dto';
+import { Type } from 'class-transformer';
+import { CreateNotification } from '../types/create-notification.type';
 
 export class CreateNotificationBatchDto {
   @ApiProperty({
@@ -12,5 +19,7 @@ export class CreateNotificationBatchDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(50)
-  readonly items!: readonly unknown[];
+  @ValidateNested({ each: true })
+  @Type(() => CreateNotificationDto)
+  readonly items!: readonly CreateNotification[];
 }

@@ -3,11 +3,8 @@ import { ReceiveController } from './receive.controller';
 import { ReceiveService } from './receive.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto';
-import { ServerResponse } from 'http';
-import { BatchResponse } from './types/batch-response.interface';
 import { Mode, Notification, Provider } from '@app/shared';
 import { AppAuthGuard } from '../auth';
-import { BatchResultStatus } from './types/batch-result-status.enum';
 
 jest.mock('jwks-rsa', () => ({
   passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),
@@ -56,7 +53,7 @@ describe('ReceiveController', () => {
       const mockNotification: Notification = {
         id: 'uuid-123',
         clientId: mockClientId,
-        createdAt: '2026-07-18',
+        createdAt: '2026-07-28T11:00:00.000Z',
         ...mockDto,
       };
 
@@ -83,110 +80,81 @@ describe('ReceiveController', () => {
 
   describe('createNotificationBatch', () => {
     const mockClientId = 'client-123';
-    let mockResponse: ServerResponse;
 
-    beforeEach(() => {
-      mockResponse = {
-        statusCode: 200,
-      } as unknown as ServerResponse;
+    it('should successfully process batch and wrap the service array into items object', async () => {
+      const mockBatchDto: CreateNotificationBatchDto = {
+        items: [
+          {
+            message: 'Hello 1',
+            contacts: [{ type: Provider.BITRIX, value: '123' }],
+            correlationId: 'corr-batch-1',
+            mode: Mode.SEQUENTIAL,
+          },
+          {
+            message: 'Hello 2',
+            contacts: [{ type: Provider.EMAIL, value: 'test@test.com' }],
+            correlationId: 'corr-batch-2',
+            mode: Mode.SEQUENTIAL,
+          },
+        ],
+      };
+
+      const mockServiceResult: Notification[] = [
+        {
+          id: 'uuid-1',
+          clientId: mockClientId,
+          createdAt: '2026-07-28T11:00:00.000Z',
+          message: 'Hello 1',
+          contacts: [{ type: Provider.BITRIX, value: '123' }],
+          correlationId: 'corr-batch-1',
+          mode: Mode.SEQUENTIAL,
+        },
+        {
+          id: 'uuid-2',
+          clientId: mockClientId,
+          createdAt: '2026-07-28T11:00:00.000Z',
+          message: 'Hello 2',
+          contacts: [{ type: Provider.EMAIL, value: 'test@test.com' }],
+          correlationId: 'corr-batch-2',
+          mode: Mode.SEQUENTIAL,
+        },
+      ];
+
+      serviceMock.receiveBatch.mockResolvedValue(mockServiceResult);
+
+      const result = await controller.createNotificationBatch(
+        mockBatchDto,
+        mockClientId,
+      );
+
+      expect(result).toEqual({ items: mockServiceResult });
+
+      expect(serviceMock.receiveBatch).toHaveBeenCalledTimes(1);
+      expect(serviceMock.receiveBatch).toHaveBeenCalledWith(
+        mockBatchDto.items,
+        mockClientId,
+      );
     });
 
-    it('should return status 202 when all items are successfully processed', async () => {
+    it('should propagate error upward if batch processing in service fails', async () => {
       const mockBatchDto: CreateNotificationBatchDto = {
         items: [
           {
             message: 'Hello',
             contacts: [{ type: Provider.BITRIX, value: '123' }],
             correlationId: 'corr-batch-1',
+            mode: Mode.SEQUENTIAL,
           },
         ],
       };
 
-      const mockBatchResponse: BatchResponse = {
-        total: 1,
-        success: 1,
-        clientError: 0,
-        serverError: 0,
-        items: [{ status: BatchResultStatus.SUCCESS, data: {} }],
-      };
+      const rmqError = new Error('RabbitMQ batch failed');
+      serviceMock.receiveBatch.mockRejectedValue(rmqError);
 
-      serviceMock.receiveBatch.mockResolvedValue(mockBatchResponse);
+      await expect(
+        controller.createNotificationBatch(mockBatchDto, mockClientId),
+      ).rejects.toThrow('RabbitMQ batch failed');
 
-      const result = await controller.createNotificationBatch(
-        mockBatchDto,
-        mockClientId,
-        mockResponse,
-      );
-
-      expect(result).toEqual(mockBatchResponse);
-      expect(mockResponse.statusCode).toBe(202);
-      expect(serviceMock.receiveBatch).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return status 207 when batch contains client or server errors', async () => {
-      const mockBatchDto: CreateNotificationBatchDto = {
-        items: [
-          {
-            message: 'Hello',
-            contacts: [{ type: Provider.BITRIX, value: '123' }],
-            correlationId: 'corr-batch-2',
-          },
-          {
-            invalid: 'field',
-          },
-        ],
-      };
-
-      const mockBatchResponse: BatchResponse = {
-        total: 2,
-        success: 1,
-        clientError: 1,
-        serverError: 0,
-        items: [
-          { status: BatchResultStatus.SUCCESS, data: {} },
-          { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
-        ],
-      };
-
-      serviceMock.receiveBatch.mockResolvedValue(mockBatchResponse);
-
-      const result = await controller.createNotificationBatch(
-        mockBatchDto,
-        mockClientId,
-        mockResponse,
-      );
-
-      expect(result).toEqual(mockBatchResponse);
-      expect(mockResponse.statusCode).toBe(207);
-      expect(serviceMock.receiveBatch).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return status 207 even when 100% of batch items fail validation', async () => {
-      const mockBatchDto: CreateNotificationBatchDto = {
-        items: [{ invalid: 'field' }, { invalid: 'field' }],
-      };
-
-      const mockBatchResponse: BatchResponse = {
-        total: 2,
-        success: 0,
-        clientError: 2,
-        serverError: 0,
-        items: [
-          { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
-          { status: BatchResultStatus.CLIENT_ERROR, data: {}, error: [] },
-        ],
-      };
-
-      serviceMock.receiveBatch.mockResolvedValue(mockBatchResponse);
-
-      const result = await controller.createNotificationBatch(
-        mockBatchDto,
-        mockClientId,
-        mockResponse,
-      );
-
-      expect(result).toEqual(mockBatchResponse);
-      expect(mockResponse.statusCode).toBe(207);
       expect(serviceMock.receiveBatch).toHaveBeenCalledTimes(1);
     });
   });
