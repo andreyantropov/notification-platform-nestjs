@@ -13,6 +13,7 @@ import {
 import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
+import { Environment } from '@app/shared';
 
 @Module({
   imports: [
@@ -33,7 +34,23 @@ import { LoggerModule } from 'nestjs-pino';
       ],
     }),
     OpenTelemetryModule.forRoot({}),
-    LoggerModule.forRoot({}),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL,
+        transport:
+          process.env.NODE_ENV == Environment.DEVELOPMENT
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  levelFirst: true,
+                  translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
+                },
+              }
+            : undefined,
+      },
+    }),
     DeliveryModule,
     HealthModule,
   ],
