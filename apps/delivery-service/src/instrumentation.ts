@@ -17,6 +17,7 @@ import {
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import pkg from '../../../package.json';
+import FastifyOtelInstrumentation from '@fastify/otel';
 
 const otelSDK = new NodeSDK({
   resource: resourceFromAttributes({
@@ -40,6 +41,9 @@ const otelSDK = new NodeSDK({
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },
+    }),
+    new FastifyOtelInstrumentation({
+      registerOnInitialization: true,
     }),
   ],
 });

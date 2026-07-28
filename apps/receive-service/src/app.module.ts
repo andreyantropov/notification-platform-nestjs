@@ -17,11 +17,7 @@ import { OpenTelemetryModule } from 'nestjs-otel';
       ],
       load: [appConfig, authConfig, rmqConfig],
     }),
-    OpenTelemetryModule.forRoot({
-      metrics: {
-        hostMetrics: true,
-      },
-    }),
+    OpenTelemetryModule.forRoot({}),
     ReceiveModule,
     HealthModule,
   ],

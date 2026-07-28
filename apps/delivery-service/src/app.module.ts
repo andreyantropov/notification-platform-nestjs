@@ -31,11 +31,7 @@ import { OpenTelemetryModule } from 'nestjs-otel';
         smtpConfig,
       ],
     }),
-    OpenTelemetryModule.forRoot({
-      metrics: {
-        hostMetrics: true,
-      },
-    }),
+    OpenTelemetryModule.forRoot({}),
     DeliveryModule,
     HealthModule,
   ],

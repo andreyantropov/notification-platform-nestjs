@@ -26,6 +26,7 @@
     "test:e2e:delivery": "cross-env NODE_ENV=test jest --config ./apps/delivery-service/test/jest-e2e.json"
   },
   "dependencies": {
+    "@fastify/otel": "^0.20.1",
     "@fastify/static": "^10.1.0",
     "@nestjs-modules/mailer": "^2.3.7",
     "@nestjs/axios": "^4.0.1",
