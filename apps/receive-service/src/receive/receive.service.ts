@@ -1,25 +1,43 @@
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE, Notification } from '@app/shared';
-import { Inject, Injectable } from '@nestjs/common';
-import { type CreateNotification } from './types/create-notification.type';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
 import { RMQ_CLIENT } from './receive.constants';
 import { firstValueFrom } from 'rxjs';
 import { SendNotificationDto } from '@app/shared';
-import { OtelMethodCounter } from 'nestjs-otel';
+import { MetricService } from 'nestjs-otel';
+import { Counter } from '@opentelemetry/api';
 
 @Injectable()
 export class ReceiveService {
+  private readonly receivedCounter: Counter;
+
   constructor(
     @Inject(RMQ_CLIENT)
     private readonly rmqClient: ClientProxy,
-  ) {}
+    private readonly metrics: MetricService,
+    private readonly logger: Logger,
+  ) {
+    this.receivedCounter = this.metrics.getCounter(
+      'notification_incoming_received_total',
+      {
+        description: 'Количество принятых и отправленных в очередь уведомлений',
+      },
+    );
+  }
 
-  @OtelMethodCounter()
   async receive(
     createNotification: CreateNotification,
     clientId: string,
   ): Promise<Notification> {
+    const { correlationId, contacts, mode } = createNotification;
+
+    this.logger.debug(
+      { correlationId, clientId, contacts, mode },
+      'Инициирована обработка входящего уведомления',
+    );
+
     const notification: SendNotificationDto = {
       ...createNotification,
       id: randomUUID(),
@@ -31,6 +49,20 @@ export class ReceiveService {
       this.rmqClient.emit(DELIVERY_NOTIFICATIONS_SEND_QUEUE, notification),
     );
 
+    this.receivedCounter.add(1, { clientId });
+
+    this.logger.log(
+      {
+        id: notification.id,
+        correlationId,
+        clientId,
+        createdAt: notification.createdAt,
+        contacts,
+        mode,
+      },
+      'Уведомление успешно поставлено в очередь',
+    );
+
     return notification;
   }
 
@@ -38,6 +70,11 @@ export class ReceiveService {
     createNotifications: readonly CreateNotification[],
     clientId: string,
   ): Promise<Notification[]> {
+    this.logger.debug(
+      { batch_size: createNotifications.length },
+      'Инициирована обработка пакета входящих уведомлений',
+    );
+
     const promises = createNotifications.map((item) =>
       this.receive(item, clientId),
     );

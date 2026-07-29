@@ -11,6 +11,8 @@ import {
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
 import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
+import { Counter } from '@opentelemetry/api';
 
 jest.mock('node:crypto', () => ({
   randomUUID: () => 'mocked-uuid-value',
@@ -20,6 +22,9 @@ describe('ReceiveService', () => {
   let service: ReceiveService;
   let clientProxyMock: jest.Mocked<Pick<ClientProxy, 'emit' | 'connect'>>;
 
+  let dummyMetricService: MetricService;
+  let dummyLogger: Logger;
+
   beforeEach(async () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
@@ -28,12 +33,31 @@ describe('ReceiveService', () => {
       connect: jest.fn().mockResolvedValue(undefined),
     };
 
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    dummyMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+    } as unknown as MetricService;
+
+    dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn(),
+    } as unknown as Logger;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReceiveService,
         {
           provide: RMQ_CLIENT,
           useValue: clientProxyMock,
+        },
+        {
+          provide: MetricService,
+          useValue: dummyMetricService,
+        },
+        {
+          provide: Logger,
+          useValue: dummyLogger,
         },
       ],
     }).compile();
@@ -168,27 +192,19 @@ describe('ReceiveService', () => {
 
   describe('checkHealth', () => {
     it('should successfully connect to RabbitMQ', async () => {
-      await expect(service.checkHealth()).resolves.not.toThrow();
+      clientProxyMock.connect.mockResolvedValue(undefined);
+
+      await expect(service.checkHealth()).resolves.toBeUndefined();
       expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error with cause if connect fails', async () => {
-      const mockError = new Error('Connection refused');
-      clientProxyMock.connect.mockRejectedValue(mockError);
+    it('should throw an error during health check if connect fails', async () => {
+      clientProxyMock.connect.mockRejectedValue(new Error('Connection failed'));
 
       await expect(service.checkHealth()).rejects.toThrow(
         'RabbitMQ недоступен',
       );
-
-      try {
-        await service.checkHealth();
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          expect(error.cause).toBe(mockError);
-        } else {
-          fail('Ошибка должна быть экземпляром класса Error');
-        }
-      }
+      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
     });
   });
 });

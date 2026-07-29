@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Channel } from '../channels/channel.abstract';
-import { Mode, type Notification } from '@app/shared';
+import { Mode, Notification } from '@app/shared';
 import { Strategy } from './strategy.abstract';
-import { OtelMethodCounter } from 'nestjs-otel';
 
 @Injectable()
 export class SequentialStrategy extends Strategy {
   protected readonly type = Mode.SEQUENTIAL;
 
-  @OtelMethodCounter()
   async execute(
     notification: Notification,
     channels: readonly Channel[],

@@ -4,6 +4,9 @@ import { StrategyFactory } from './strategies/strategy.factory';
 import { CHANNELS } from './delivery.constants';
 import { Channel } from './channels/channel.abstract';
 import { Mode, Notification, Provider } from '@app/shared';
+import { MetricService } from 'nestjs-otel';
+import { Logger } from 'nestjs-pino';
+import { Counter } from '@opentelemetry/api';
 
 describe('DeliveryService', () => {
   let service: DeliveryService;
@@ -12,6 +15,9 @@ describe('DeliveryService', () => {
     Promise<void>,
     [Notification, readonly Channel[]]
   >;
+
+  let dummyMetricService: MetricService;
+  let dummyLogger: Logger;
 
   const mockChannel: Channel = {
     type: Provider.EMAIL,
@@ -41,6 +47,16 @@ describe('DeliveryService', () => {
       .fn()
       .mockReturnValue({ execute: mockStrategyExecute });
 
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    dummyMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+    } as unknown as MetricService;
+
+    dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Logger;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeliveryService,
@@ -53,6 +69,14 @@ describe('DeliveryService', () => {
         {
           provide: CHANNELS,
           useValue: mockChannelsList,
+        },
+        {
+          provide: MetricService,
+          useValue: dummyMetricService,
+        },
+        {
+          provide: Logger,
+          useValue: dummyLogger,
         },
       ],
     }).compile();
@@ -114,6 +138,8 @@ describe('DeliveryService', () => {
           DeliveryService,
           { provide: StrategyFactory, useValue: { get: mockGetStrategy } },
           { provide: CHANNELS, useValue: [] },
+          { provide: MetricService, useValue: dummyMetricService },
+          { provide: Logger, useValue: dummyLogger },
         ],
       }).compile();
 

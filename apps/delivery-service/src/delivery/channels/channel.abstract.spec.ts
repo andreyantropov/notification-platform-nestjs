@@ -1,5 +1,9 @@
 import { Channel } from './channel.abstract';
 import { Contact, Provider } from '@app/shared';
+import { ChannelContext } from './channel.context';
+import { Counter, Histogram } from '@opentelemetry/api';
+import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
 
 describe('Channel', () => {
   class TestChannel extends Channel {
@@ -11,9 +15,28 @@ describe('Channel', () => {
   }
 
   let channel: TestChannel;
+  let mockContext: ChannelContext;
+
+  let mockCounter: jest.Mocked<Pick<Counter, 'add'>>;
+  let mockHistogram: jest.Mocked<Pick<Histogram, 'record'>>;
+  let mockLogger: jest.Mocked<Pick<Logger, 'log' | 'debug'>>;
 
   beforeEach(() => {
-    channel = new TestChannel({ maxConcurrent: 1, minTime: 0 });
+    mockCounter = { add: jest.fn() };
+    mockHistogram = { record: jest.fn() };
+    mockLogger = { log: jest.fn(), debug: jest.fn() };
+
+    const mockMetricService = {
+      getCounter: jest.fn().mockReturnValue(mockCounter),
+      getHistogram: jest.fn().mockReturnValue(mockHistogram),
+    } as unknown as MetricService;
+
+    mockContext = {
+      metrics: mockMetricService,
+      logger: mockLogger as unknown as Logger,
+    };
+
+    channel = new TestChannel(mockContext, { maxConcurrent: 1, minTime: 0 });
   });
 
   describe('isSupports', () => {
@@ -65,6 +88,61 @@ describe('Channel', () => {
       await expect(channel.send(contact, 'Hello')).rejects.toThrow(
         'SMTP Timeout',
       );
+    });
+
+    it('should record success metrics and log debug/info upon successful send', async () => {
+      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
+      const message = 'Hello';
+
+      await channel.send(contact, message);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { provider: Provider.EMAIL, contact: 'test@test.com' },
+        `Инициирована отправка уведомления.`,
+      );
+
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        { provider: Provider.EMAIL, contact: 'test@test.com' },
+        `Уведомление успешно отправлено.`,
+      );
+
+      expect(mockCounter.add).toHaveBeenCalledTimes(1);
+      expect(mockCounter.add).toHaveBeenCalledWith(1, {
+        provider: Provider.EMAIL,
+        status: 'success',
+      });
+
+      expect(mockHistogram.record).toHaveBeenCalledTimes(1);
+      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), {
+        provider: Provider.EMAIL,
+        status: 'success',
+      });
+    });
+
+    it('should record error metrics, log debug, but NOT log info when performSend fails', async () => {
+      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
+      jest.spyOn(channel, 'performSend').mockRejectedValue(new Error('Failed'));
+
+      await expect(channel.send(contact, 'Hello')).rejects.toThrow('Failed');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { provider: Provider.EMAIL, contact: 'test@test.com' },
+        `Инициирована отправка уведомления.`,
+      );
+
+      expect(mockLogger.log).not.toHaveBeenCalled();
+
+      expect(mockCounter.add).toHaveBeenCalledTimes(1);
+      expect(mockCounter.add).toHaveBeenCalledWith(1, {
+        provider: Provider.EMAIL,
+        status: 'error',
+      });
+
+      expect(mockHistogram.record).toHaveBeenCalledTimes(1);
+      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), {
+        provider: Provider.EMAIL,
+        status: 'error',
+      });
     });
   });
 });

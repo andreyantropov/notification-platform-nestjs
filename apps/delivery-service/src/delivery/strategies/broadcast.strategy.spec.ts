@@ -1,6 +1,10 @@
 import { BroadcastStrategy } from './broadcast.strategy';
 import { Notification, Mode, Provider, Contact } from '@app/shared';
 import { Channel } from '../channels/channel.abstract';
+import { ChannelContext } from '../channels/channel.context';
+import { Counter, Histogram } from '@opentelemetry/api';
+import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
 
 describe('BroadcastStrategy', () => {
   let strategy: BroadcastStrategy;
@@ -9,11 +13,12 @@ describe('BroadcastStrategy', () => {
     constructor(
       public readonly type: Provider,
       public sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
+      ctx: ChannelContext,
     ) {
-      super();
+      super(ctx);
     }
 
-    async send(contact: Contact, message: string): Promise<void> {
+    override async send(contact: Contact, message: string): Promise<void> {
       return this.sendSpy(contact, message);
     }
 
@@ -40,13 +45,39 @@ describe('BroadcastStrategy', () => {
   let channels: Channel[];
 
   beforeEach(() => {
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
+
+    const mockMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
+    } as unknown as MetricService;
+
+    const dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Logger;
+
+    const mockChannelContext: ChannelContext = {
+      metrics: mockMetricService,
+      logger: dummyLogger,
+    };
+
     strategy = new BroadcastStrategy();
 
     const emailSpy = jest.fn<Promise<void>, [Contact, string]>();
     const bitrixSpy = jest.fn<Promise<void>, [Contact, string]>();
 
-    emailChannel = new MockChannel(Provider.EMAIL, emailSpy);
-    bitrixChannel = new MockChannel(Provider.BITRIX, bitrixSpy);
+    emailChannel = new MockChannel(
+      Provider.EMAIL,
+      emailSpy,
+      mockChannelContext,
+    );
+    bitrixChannel = new MockChannel(
+      Provider.BITRIX,
+      bitrixSpy,
+      mockChannelContext,
+    );
 
     channels = [emailChannel, bitrixChannel];
   });

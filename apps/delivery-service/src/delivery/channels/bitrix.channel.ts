@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
-import { type Contact, Provider } from '@app/shared';
+import { Contact, Provider } from '@app/shared';
 import { Channel } from './channel.abstract';
 import { bitrixConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
-import { OtelMethodCounter } from 'nestjs-otel';
+import { ChannelContext } from './channel.context';
 
 interface BitrixResponse {
   readonly result?: unknown;
@@ -22,6 +22,7 @@ export class BitrixChannel extends Channel {
 
   constructor(
     private readonly httpService: HttpService,
+    ctx: ChannelContext,
     @Inject(bitrixConfig.KEY)
     {
       url,
@@ -31,7 +32,7 @@ export class BitrixChannel extends Channel {
       throttle,
     }: ConfigType<typeof bitrixConfig>,
   ) {
-    super(throttle);
+    super(ctx, throttle);
 
     this.baseUrl = `${url}/rest/${userId}/${authToken}`;
     this.timeoutMs = timeoutMs;
@@ -55,7 +56,6 @@ export class BitrixChannel extends Channel {
     }
   }
 
-  @OtelMethodCounter()
   protected async performSend(
     contact: Contact,
     message: string,

@@ -4,6 +4,10 @@ import { ChannelsIndicator } from './channels.indicator';
 import { Channel } from '../channels/channel.abstract';
 import { Provider } from '@app/shared';
 import { CHANNELS } from '../delivery.constants';
+import { ChannelContext } from '../channels/channel.context';
+import { Counter, Histogram } from '@opentelemetry/api';
+import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
 
 describe('ChannelsIndicator', () => {
   let indicator: ChannelsIndicator;
@@ -14,11 +18,12 @@ describe('ChannelsIndicator', () => {
     constructor(
       protected readonly type: Provider,
       public readonly checkHealthSpy: jest.Mock<Promise<void>, []>,
+      ctx: ChannelContext,
     ) {
-      super();
+      super(ctx);
     }
 
-    async checkHealth(): Promise<void> {
+    override async checkHealth(): Promise<void> {
       return this.checkHealthSpy();
     }
 
@@ -38,8 +43,34 @@ describe('ChannelsIndicator', () => {
     emailSpy = jest.fn<Promise<void>, []>();
     bitrixSpy = jest.fn<Promise<void>, []>();
 
-    const emailChannel = new TestChannel(Provider.EMAIL, emailSpy);
-    const bitrixChannel = new TestChannel(Provider.BITRIX, bitrixSpy);
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
+
+    const mockMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
+    } as unknown as MetricService;
+
+    const dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Logger;
+
+    const mockChannelContext: ChannelContext = {
+      metrics: mockMetricService,
+      logger: dummyLogger,
+    };
+
+    const emailChannel = new TestChannel(
+      Provider.EMAIL,
+      emailSpy,
+      mockChannelContext,
+    );
+    const bitrixChannel = new TestChannel(
+      Provider.BITRIX,
+      bitrixSpy,
+      mockChannelContext,
+    );
     mockChannelsList = [emailChannel, bitrixChannel];
 
     const mockIndicatorInstance = { up: mockUp, down: mockDown };

@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Channel } from './channel.abstract';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
+import { ChannelContext } from './channel.context';
 
 @Injectable()
 export class MockEmailChannel extends Channel {
   protected readonly type = Provider.EMAIL;
 
-  constructor() {
-    super();
+  constructor(ctx: ChannelContext) {
+    super(ctx);
   }
 
   protected async performSend(

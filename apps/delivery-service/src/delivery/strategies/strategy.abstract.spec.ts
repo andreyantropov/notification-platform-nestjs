@@ -1,9 +1,15 @@
 import { Strategy } from './strategy.abstract';
 import { Channel } from '../channels/channel.abstract';
-import { Contact, Provider } from '@app/shared';
+import { Contact, Provider, Mode } from '@app/shared';
+import { ChannelContext } from '../channels/channel.context';
+import { Counter, Histogram } from '@opentelemetry/api';
+import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
 
 describe('Strategy', () => {
   class TestableStrategy extends Strategy {
+    protected readonly type = Mode.RACE;
+
     async execute(): Promise<void> {}
 
     public testGetAttempts(
@@ -16,11 +22,12 @@ describe('Strategy', () => {
 
   class MockChannel extends Channel {
     protected readonly type: Provider;
-    constructor(type: Provider) {
-      super();
+
+    constructor(type: Provider, ctx: ChannelContext) {
+      super(ctx);
       this.type = type;
     }
-    async send(): Promise<void> {}
+
     protected async performSend(): Promise<void> {
       return Promise.resolve();
     }
@@ -29,11 +36,31 @@ describe('Strategy', () => {
   let strategy: TestableStrategy;
   let emailChannel: MockChannel;
   let bitrixChannel: MockChannel;
+  let mockChannelContext: ChannelContext;
 
   beforeEach(() => {
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
+
+    const mockMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
+    } as unknown as MetricService;
+
+    const dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Logger;
+
+    mockChannelContext = {
+      metrics: mockMetricService,
+      logger: dummyLogger,
+    };
+
     strategy = new TestableStrategy();
-    emailChannel = new MockChannel(Provider.EMAIL);
-    bitrixChannel = new MockChannel(Provider.BITRIX);
+
+    emailChannel = new MockChannel(Provider.EMAIL, mockChannelContext);
+    bitrixChannel = new MockChannel(Provider.BITRIX, mockChannelContext);
   });
 
   describe('getAttempts', () => {
@@ -76,7 +103,11 @@ describe('Strategy', () => {
         type: Provider.EMAIL,
         value: 'test@email.com',
       };
-      const secondEmailChannel = new MockChannel(Provider.EMAIL);
+
+      const secondEmailChannel = new MockChannel(
+        Provider.EMAIL,
+        mockChannelContext,
+      );
 
       const result = strategy.testGetAttempts(
         [emailChannel, secondEmailChannel],
@@ -101,8 +132,9 @@ describe('Strategy', () => {
     it('should group attempts by contacts first, then by channels', () => {
       const contact1: Contact = { type: Provider.EMAIL, value: 'c1@test.com' };
       const contact2: Contact = { type: Provider.EMAIL, value: 'c2@test.com' };
-      const ch1 = new MockChannel(Provider.EMAIL);
-      const ch2 = new MockChannel(Provider.EMAIL);
+
+      const ch1 = new MockChannel(Provider.EMAIL, mockChannelContext);
+      const ch2 = new MockChannel(Provider.EMAIL, mockChannelContext);
 
       const result = strategy.testGetAttempts([ch1, ch2], [contact1, contact2]);
 

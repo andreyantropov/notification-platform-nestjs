@@ -3,6 +3,10 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { EmailChannel } from './email.channel';
 import { emailConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
+import { ChannelContext } from './channel.context';
+import { Counter, Histogram } from '@opentelemetry/api';
+import { Logger } from '@nestjs/common';
+import { MetricService } from 'nestjs-otel';
 
 describe('EmailChannel', () => {
   let channel: EmailChannel;
@@ -23,6 +27,19 @@ describe('EmailChannel', () => {
     mockSendMail = jest.fn();
     mockVerify = jest.fn();
 
+    const dummyCounter = { add: jest.fn() } as unknown as Counter;
+    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
+
+    const mockMetricService = {
+      getCounter: jest.fn().mockReturnValue(dummyCounter),
+      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
+    } as unknown as MetricService;
+
+    const dummyLogger = {
+      log: jest.fn(),
+      debug: jest.fn(),
+    } as unknown as Logger;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailChannel,
@@ -39,6 +56,13 @@ describe('EmailChannel', () => {
           provide: emailConfig.KEY,
           useValue: mockConfig,
         },
+        {
+          provide: ChannelContext,
+          useValue: {
+            metrics: mockMetricService,
+            logger: dummyLogger,
+          } satisfies Partial<ChannelContext>,
+        },
       ],
     }).compile();
 
@@ -52,7 +76,7 @@ describe('EmailChannel', () => {
   describe('constructor', () => {
     it('should be successfully initialized with correct provider type', () => {
       expect(channel).toBeDefined();
-      expect(channel.type).toBe(Provider.EMAIL);
+      expect(channel['type']).toBe(Provider.EMAIL);
     });
   });
 
