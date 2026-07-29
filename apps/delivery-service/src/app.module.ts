@@ -10,10 +10,10 @@ import {
   rmqConfig,
   smtpConfig,
 } from './config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
-import { Environment } from '@app/shared';
+import { Environment, RmqExceptionFilter } from '@app/shared';
 
 @Module({
   imports: [
@@ -62,6 +62,10 @@ import { Environment } from '@app/shared';
         forbidNonWhitelisted: true,
         transform: true,
       }),
+    },
+    {
+      provide: APP_FILTER,
+      useClass: RmqExceptionFilter,
     },
   ],
 })

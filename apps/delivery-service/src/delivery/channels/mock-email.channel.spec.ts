@@ -3,7 +3,7 @@ import { MockEmailChannel } from './mock-email.channel';
 import { Provider, Contact } from '@app/shared';
 import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 
 describe('MockEmailChannel', () => {

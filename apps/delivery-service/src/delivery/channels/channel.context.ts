@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MetricService } from 'nestjs-otel';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class ChannelContext {

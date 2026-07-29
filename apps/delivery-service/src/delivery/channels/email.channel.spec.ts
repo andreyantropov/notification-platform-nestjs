@@ -5,7 +5,7 @@ import { emailConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
 import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 
 describe('EmailChannel', () => {
@@ -36,6 +36,7 @@ describe('EmailChannel', () => {
     } as unknown as MetricService;
 
     const dummyLogger = {
+      warn: jest.fn(),
       log: jest.fn(),
       debug: jest.fn(),
     } as unknown as Logger;

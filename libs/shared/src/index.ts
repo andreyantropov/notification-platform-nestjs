@@ -6,3 +6,5 @@ export * from './interfaces/contact.interface';
 export * from './interfaces/notification.interface';
 export * from './constants/rmq.constants';
 export * from './dto/send-notification.dto';
+export * from './filters/http-exception.filter';
+export * from './filters/rmq-exception-filter';

@@ -2,7 +2,7 @@ import { Channel } from './channel.abstract';
 import { Contact, Provider } from '@app/shared';
 import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 
 describe('Channel', () => {
@@ -19,12 +19,12 @@ describe('Channel', () => {
 
   let mockCounter: jest.Mocked<Pick<Counter, 'add'>>;
   let mockHistogram: jest.Mocked<Pick<Histogram, 'record'>>;
-  let mockLogger: jest.Mocked<Pick<Logger, 'log' | 'debug'>>;
+  let mockLogger: jest.Mocked<Pick<Logger, 'log' | 'debug' | 'warn'>>;
 
   beforeEach(() => {
     mockCounter = { add: jest.fn() };
     mockHistogram = { record: jest.fn() };
-    mockLogger = { log: jest.fn(), debug: jest.fn() };
+    mockLogger = { log: jest.fn(), debug: jest.fn(), warn: jest.fn() };
 
     const mockMetricService = {
       getCounter: jest.fn().mockReturnValue(mockCounter),
@@ -106,6 +106,8 @@ describe('Channel', () => {
         `Уведомление успешно отправлено.`,
       );
 
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+
       expect(mockCounter.add).toHaveBeenCalledTimes(1);
       expect(mockCounter.add).toHaveBeenCalledWith(1, {
         provider: Provider.EMAIL,
@@ -119,9 +121,10 @@ describe('Channel', () => {
       });
     });
 
-    it('should record error metrics, log debug, but NOT log info when performSend fails', async () => {
+    it('should record error metrics, log debug and warn, but NOT log info when performSend fails', async () => {
       const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
-      jest.spyOn(channel, 'performSend').mockRejectedValue(new Error('Failed'));
+      const testError = new Error('Failed');
+      jest.spyOn(channel, 'performSend').mockRejectedValue(testError);
 
       await expect(channel.send(contact, 'Hello')).rejects.toThrow('Failed');
 
@@ -131,6 +134,15 @@ describe('Channel', () => {
       );
 
       expect(mockLogger.log).not.toHaveBeenCalled();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        {
+          err: testError,
+          provider: Provider.EMAIL,
+          contact: 'test@test.com',
+        },
+        `Сбой при отправке уведомления`,
+      );
 
       expect(mockCounter.add).toHaveBeenCalledTimes(1);
       expect(mockCounter.add).toHaveBeenCalledWith(1, {

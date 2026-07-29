@@ -2,11 +2,11 @@ import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ReceiveModule } from './receive';
 import { HealthModule } from './health';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { appConfig, authConfig, rmqConfig } from './config';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
-import { Environment } from '@app/shared';
+import { Environment, HttpExceptionFilter } from '@app/shared';
 
 @Module({
   imports: [
@@ -48,6 +48,10 @@ import { Environment } from '@app/shared';
         forbidNonWhitelisted: true,
         transform: true,
       }),
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
 })

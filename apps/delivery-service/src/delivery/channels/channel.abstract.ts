@@ -59,6 +59,14 @@ export abstract class Channel {
         );
       } catch (error) {
         status = 'error';
+        this.ctx.logger.warn(
+          {
+            err: error,
+            provider,
+            contact: contact.value,
+          },
+          `Сбой при отправке уведомления`,
+        );
         throw error;
       } finally {
         const duration = Date.now() - startTime;

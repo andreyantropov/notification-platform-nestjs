@@ -3,7 +3,7 @@ import { Notification, Mode, Provider, Contact } from '@app/shared';
 import { Channel } from '../channels/channel.abstract';
 import { ChannelContext } from '../channels/channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 
 describe('BroadcastStrategy', () => {

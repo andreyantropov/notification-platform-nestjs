@@ -10,7 +10,7 @@ import {
   DELIVERY_NOTIFICATIONS_SEND_QUEUE,
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 import { Counter } from '@opentelemetry/api';
 

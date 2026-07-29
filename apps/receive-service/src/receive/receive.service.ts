@@ -1,5 +1,5 @@
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE, Notification } from '@app/shared';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { SendNotificationDto } from '@app/shared';
 import { MetricService } from 'nestjs-otel';
 import { Counter } from '@opentelemetry/api';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class ReceiveService {
