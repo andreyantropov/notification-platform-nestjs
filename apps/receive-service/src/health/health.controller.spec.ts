@@ -5,24 +5,20 @@ jest.mock('jwks-rsa', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { RmqIndicator } from '../receive';
 
 describe('HealthController', () => {
   let controller: HealthController;
-
   let mockCheck: jest.Mock<Promise<HealthCheckResult>, [unknown[]]>;
-  let mockisHealthy: jest.Mock<Promise<Record<string, unknown>>, [string]>;
 
   const mockHealthyResult: HealthCheckResult = {
     status: 'ok',
-    info: { gateways: { status: 'up' } },
+    info: { application: { status: 'up' } },
     error: {},
-    details: { gateways: { status: 'up' } },
+    details: { application: { status: 'up' } },
   };
 
   beforeEach(async () => {
     mockCheck = jest.fn<Promise<HealthCheckResult>, [unknown[]]>();
-    mockisHealthy = jest.fn<Promise<Record<string, unknown>>, [string]>();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
@@ -31,12 +27,6 @@ describe('HealthController', () => {
           provide: HealthCheckService,
           useValue: {
             check: mockCheck,
-          },
-        },
-        {
-          provide: RmqIndicator,
-          useValue: {
-            isHealthy: mockisHealthy,
           },
         },
       ],
@@ -74,9 +64,8 @@ describe('HealthController', () => {
   });
 
   describe('readiness', () => {
-    it('should successfully execute readiness probe by delegating check to service indicator', async () => {
+    it('should successfully execute readiness probe and return active application status', async () => {
       mockCheck.mockResolvedValue(mockHealthyResult);
-      mockisHealthy.mockResolvedValue({ gateways: { status: 'up' } });
 
       const result = await controller.readiness();
 
@@ -87,9 +76,8 @@ describe('HealthController', () => {
       expect(passedFunctions).toHaveLength(1);
       expect(typeof passedFunctions[0]).toBe('function');
 
-      await (passedFunctions[0] as () => Promise<unknown>)();
-      expect(mockisHealthy).toHaveBeenCalledTimes(1);
-      expect(mockisHealthy).toHaveBeenCalledWith('rmq');
+      const appStatus = (passedFunctions[0] as () => unknown)();
+      expect(appStatus).toEqual({ application: { status: 'up' } });
     });
   });
 });

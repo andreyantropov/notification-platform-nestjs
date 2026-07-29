@@ -189,22 +189,4 @@ describe('ReceiveService', () => {
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
     });
   });
-
-  describe('checkHealth', () => {
-    it('should successfully connect to RabbitMQ', async () => {
-      clientProxyMock.connect.mockResolvedValue(undefined);
-
-      await expect(service.checkHealth()).resolves.toBeUndefined();
-      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw an error during health check if connect fails', async () => {
-      clientProxyMock.connect.mockRejectedValue(new Error('Connection failed'));
-
-      await expect(service.checkHealth()).rejects.toThrow(
-        'RabbitMQ недоступен',
-      );
-      expect(clientProxyMock.connect).toHaveBeenCalledTimes(1);
-    });
-  });
 });

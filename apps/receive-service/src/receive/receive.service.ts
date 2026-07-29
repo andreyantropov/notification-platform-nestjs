@@ -81,12 +81,4 @@ export class ReceiveService {
     );
     return await Promise.all(promises);
   }
-
-  async checkHealth(): Promise<void> {
-    try {
-      await this.rmqClient.connect();
-    } catch (error) {
-      throw new Error('RabbitMQ недоступен', { cause: error });
-    }
-  }
 }

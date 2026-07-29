@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ReceiveService } from './receive.service';
 import { ReceiveController } from './receive.controller';
-import { RmqIndicator } from './indicators/rmq.indicator';
 import { AuthModule } from '../auth';
 import { ConfigType } from '@nestjs/config';
 import { RMQ_CLIENT } from './receive.constants';
@@ -22,7 +21,7 @@ import { rmqConfig } from '../config/rmq.config';
     TerminusModule,
   ],
   controllers: [ReceiveController],
-  providers: [ReceiveService, RmqIndicator],
-  exports: [RmqIndicator],
+  providers: [ReceiveService],
+  exports: [],
 })
 export class ReceiveModule {}
