@@ -13,7 +13,7 @@ import {
 class Env {
   @IsEnum(Environment)
   @IsOptional()
-  NODE_ENV: Environment = Environment.DEVELOPMENT;
+  NODE_ENV = Environment.DEVELOPMENT;
 
   @IsNumber()
   @IsOptional()
@@ -24,7 +24,7 @@ class Env {
 
   @IsEnum(LogLevel)
   @IsOptional()
-  LOG_LEVEL: LogLevel = LogLevel.INFO;
+  LOG_LEVEL = LogLevel.INFO;
 }
 
 export const appConfig = registerAs('app', () => {
