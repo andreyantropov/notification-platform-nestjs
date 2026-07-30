@@ -2,7 +2,6 @@ import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
 import { ReceiveService } from './receive.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto';
-import { AppAuthGuard, GetClientId } from '../auth';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -13,6 +12,9 @@ import {
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { Mode, Provider } from '@app/shared';
 import { NotificationBatchResponseDto } from './dto/notification-batch-response.dto';
+import { GetClientId } from '../auth/decorators/get-client-id.decorator';
+import { AppAuthGuard } from '../auth/guards/app-auth.guard';
+
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @ApiResponse({

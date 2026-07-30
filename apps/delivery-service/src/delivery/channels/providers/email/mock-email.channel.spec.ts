@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MockBitrixChannel } from './mock-bitrix.channel';
+import { MockEmailChannel } from './mock-email.channel';
 import { Provider, Contact } from '@app/shared';
-import { ChannelContext } from './channel.context';
+import { ChannelContext } from '../../channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 
-describe('MockBitrixChannel', () => {
-  let channel: MockBitrixChannel;
+describe('MockEmailChannel', () => {
+  let channel: MockEmailChannel;
 
   beforeEach(async () => {
     const dummyCounter = { add: jest.fn() } as unknown as Counter;
@@ -27,7 +27,7 @@ describe('MockBitrixChannel', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        MockBitrixChannel,
+        MockEmailChannel,
         {
           provide: ChannelContext,
           useValue: {
@@ -38,7 +38,7 @@ describe('MockBitrixChannel', () => {
       ],
     }).compile();
 
-    channel = module.get<MockBitrixChannel>(MockBitrixChannel);
+    channel = module.get<MockEmailChannel>(MockEmailChannel);
   });
 
   afterEach(() => {
@@ -46,14 +46,17 @@ describe('MockBitrixChannel', () => {
   });
 
   describe('send', () => {
-    it('should successfully simulate message delivery without throwing an error', async () => {
-      const contact: Contact = { type: Provider.BITRIX, value: '12345' };
-      const message = 'Test payload';
+    it('should successfully simulate email message delivery without throwing an error', async () => {
+      const contact: Contact = {
+        type: Provider.EMAIL,
+        value: 'test@email.com',
+      };
+      const message = 'Test email payload';
 
       await expect(channel.send(contact, message)).resolves.not.toThrow();
 
       expect(console.log).toHaveBeenCalledWith(
-        `[MOCK BITRIX] To: 12345 | Message: Test payload`,
+        `[MOCK EMAIL] To: test@email.com | Message: Test email payload`,
       );
     });
   });

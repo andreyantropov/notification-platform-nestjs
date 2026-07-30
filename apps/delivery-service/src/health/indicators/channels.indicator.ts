@@ -3,8 +3,8 @@ import {
   HealthIndicatorService,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { Channel } from '../channels/channel.abstract';
-import { CHANNELS } from '../delivery.constants';
+import { Channel } from '../../delivery/channels/channel.abstract';
+import { CHANNELS } from '../../delivery/channels/channels.constants';
 
 @Injectable()
 export class ChannelsIndicator {

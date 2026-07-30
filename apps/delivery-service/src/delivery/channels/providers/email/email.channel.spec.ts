@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EmailChannel } from './email.channel';
-import { emailConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
-import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
+import { emailConfig } from '../../../../config/email.config';
+import { ChannelContext } from '../../channel.context';
 
 describe('EmailChannel', () => {
   let channel: EmailChannel;

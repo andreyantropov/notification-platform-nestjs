@@ -2,10 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
-import { Channel } from './channel.abstract';
-import { bitrixConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
-import { ChannelContext } from './channel.context';
+import { Channel } from '../../channel.abstract';
+import { bitrixConfig } from '../../../../config/bitrix.config';
+import { ChannelContext } from '../../channel.context';
 
 interface BitrixResponse {
   readonly result?: unknown;

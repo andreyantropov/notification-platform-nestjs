@@ -6,8 +6,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AUTH_GUARD } from './auth.constants';
 import { AppAuthGuard } from './guards/app-auth.guard';
 import { Environment } from '@app/shared';
-import { appConfig } from '../config';
 import { ConfigType } from '@nestjs/config';
+import { appConfig } from '../config/app.config';
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' })],

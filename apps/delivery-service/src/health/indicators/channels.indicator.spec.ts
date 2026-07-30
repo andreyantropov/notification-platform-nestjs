@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { ChannelsIndicator } from './channels.indicator';
-import { Channel } from '../channels/channel.abstract';
 import { Provider } from '@app/shared';
-import { CHANNELS } from '../delivery.constants';
-import { ChannelContext } from '../channels/channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
+import { Channel } from '../../delivery/channels/channel.abstract';
+import { ChannelContext } from '../../delivery/channels/channel.context';
+import { CHANNELS } from '../../delivery/channels/channels.constants';
 
 describe('ChannelsIndicator', () => {
   let indicator: ChannelsIndicator;

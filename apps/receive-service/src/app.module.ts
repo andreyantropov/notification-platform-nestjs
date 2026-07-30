@@ -1,12 +1,14 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ReceiveModule } from './receive';
-import { HealthModule } from './health';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
-import { appConfig, authConfig, rmqConfig } from './config';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
 import { Environment, HttpExceptionFilter } from '@app/shared';
+import { appConfig } from './config/app.config';
+import { authConfig } from './config/auth.config';
+import { rmqConfig } from './config/rmq.config';
+import { HealthModule } from './health/health.module';
+import { ReceiveModule } from './receive/receive.module';
 
 @Module({
   imports: [

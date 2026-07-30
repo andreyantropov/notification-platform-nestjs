@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthCheckService, HealthCheckResult } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { ChannelsIndicator } from '../delivery';
+import { ChannelsIndicator } from './indicators/channels.indicator';
 
 describe('HealthController', () => {
   let controller: HealthController;

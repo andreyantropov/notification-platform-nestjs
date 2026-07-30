@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MockEmailChannel } from './mock-email.channel';
+import { MockBitrixChannel } from './mock-bitrix.channel';
 import { Provider, Contact } from '@app/shared';
-import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
+import { ChannelContext } from '../../channel.context';
 
-describe('MockEmailChannel', () => {
-  let channel: MockEmailChannel;
+describe('MockBitrixChannel', () => {
+  let channel: MockBitrixChannel;
 
   beforeEach(async () => {
     const dummyCounter = { add: jest.fn() } as unknown as Counter;
@@ -27,7 +27,7 @@ describe('MockEmailChannel', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        MockEmailChannel,
+        MockBitrixChannel,
         {
           provide: ChannelContext,
           useValue: {
@@ -38,7 +38,7 @@ describe('MockEmailChannel', () => {
       ],
     }).compile();
 
-    channel = module.get<MockEmailChannel>(MockEmailChannel);
+    channel = module.get<MockBitrixChannel>(MockBitrixChannel);
   });
 
   afterEach(() => {
@@ -46,17 +46,14 @@ describe('MockEmailChannel', () => {
   });
 
   describe('send', () => {
-    it('should successfully simulate email message delivery without throwing an error', async () => {
-      const contact: Contact = {
-        type: Provider.EMAIL,
-        value: 'test@email.com',
-      };
-      const message = 'Test email payload';
+    it('should successfully simulate message delivery without throwing an error', async () => {
+      const contact: Contact = { type: Provider.BITRIX, value: '12345' };
+      const message = 'Test payload';
 
       await expect(channel.send(contact, message)).resolves.not.toThrow();
 
       expect(console.log).toHaveBeenCalledWith(
-        `[MOCK EMAIL] To: test@email.com | Message: Test email payload`,
+        `[MOCK BITRIX] To: 12345 | Message: Test payload`,
       );
     });
   });

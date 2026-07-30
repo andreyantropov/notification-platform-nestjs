@@ -2,10 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { from, firstValueFrom, timeout } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
-import { Channel } from './channel.abstract';
-import { emailConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
-import { ChannelContext } from './channel.context';
+import { Channel } from '../../channel.abstract';
+import { emailConfig } from '../../../../config/email.config';
+import { ChannelContext } from '../../channel.context';
 
 @Injectable()
 export class EmailChannel extends Channel {

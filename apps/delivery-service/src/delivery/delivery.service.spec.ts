@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryService } from './delivery.service';
 import { StrategyFactory } from './strategies/strategy.factory';
-import { CHANNELS } from './delivery.constants';
 import { Channel } from './channels/channel.abstract';
 import { Mode, Notification, Provider } from '@app/shared';
 import { MetricService } from 'nestjs-otel';
 import { Logger } from 'nestjs-pino';
 import { Counter } from '@opentelemetry/api';
+import { CHANNELS } from './channels/channels.constants';
 
 describe('DeliveryService', () => {
   let service: DeliveryService;

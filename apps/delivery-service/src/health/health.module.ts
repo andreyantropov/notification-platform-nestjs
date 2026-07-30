@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
-import { DeliveryModule } from '../delivery';
 import { HealthController } from './health.controller';
+import { ChannelsModule } from '../delivery/channels/channels.module';
 
 @Module({
-  imports: [TerminusModule, DeliveryModule],
+  imports: [TerminusModule, ChannelsModule],
   controllers: [HealthController],
   providers: [],
 })

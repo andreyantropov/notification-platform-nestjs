@@ -3,12 +3,12 @@ import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BitrixChannel } from './bitrix.channel';
-import { bitrixConfig } from '../../config';
 import { Provider, Contact } from '@app/shared';
-import { ChannelContext } from './channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
+import { bitrixConfig } from '../../../../config/bitrix.config';
+import { ChannelContext } from '../../channel.context';
 
 interface BitrixResponse {
   readonly result?: unknown;

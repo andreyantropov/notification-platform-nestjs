@@ -4,7 +4,7 @@ import { ReceiveService } from './receive.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto';
 import { Mode, Notification, Provider } from '@app/shared';
-import { AppAuthGuard } from '../auth';
+import { AppAuthGuard } from '../auth/guards/app-auth.guard';
 
 jest.mock('jwks-rsa', () => ({
   passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),

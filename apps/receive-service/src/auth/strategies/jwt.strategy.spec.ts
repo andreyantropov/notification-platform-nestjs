@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
-import { authConfig } from '../../config';
 import { type ConfigType } from '@nestjs/config';
+import { authConfig } from '../../config/auth.config';
 
 jest.mock('jwks-rsa', () => ({
   passportJwtSecret: jest.fn().mockReturnValue(() => 'mocked-secret'),

@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ReceiveService } from './receive.service';
 import { ReceiveController } from './receive.controller';
-import { AuthModule } from '../auth';
 import { ConfigType } from '@nestjs/config';
 import { RMQ_CLIENT } from './receive.constants';
 import { ClientsModule } from '@nestjs/microservices';
-import { TerminusModule } from '@nestjs/terminus';
 import { rmqConfig } from '../config/rmq.config';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -18,7 +17,6 @@ import { rmqConfig } from '../config/rmq.config';
       },
     ]),
     AuthModule,
-    TerminusModule,
   ],
   controllers: [ReceiveController],
   providers: [ReceiveService],
