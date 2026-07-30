@@ -1,0 +1,29 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "queues": [
+    {
+      "name": "delivery.notifications.send",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic",
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "delivery.notifications.send.dlq"
+      }
+    },
+    {
+      "name": "delivery.notifications.send.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ]
+}
