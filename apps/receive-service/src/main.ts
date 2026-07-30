@@ -8,6 +8,7 @@ import {
 import { setupSwagger } from './config/swagger.config';
 import { RequestMethod } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import { LoggingInterceptor } from '@app/shared';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -16,7 +17,10 @@ async function bootstrap(): Promise<void> {
     { bufferLogs: true },
   );
 
-  app.useLogger(app.get(Logger));
+  const logger = app.get(Logger);
+  app.useLogger(logger);
+
+  app.useGlobalInterceptors(new LoggingInterceptor(logger));
 
   app.enableShutdownHooks();
 

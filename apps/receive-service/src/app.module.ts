@@ -1,9 +1,9 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
-import { Environment, HttpExceptionFilter } from '@app/shared';
+import { Environment } from '@app/shared';
 import { appConfig } from './config/app.config';
 import { authConfig } from './config/auth.config';
 import { rmqConfig } from './config/rmq.config';
@@ -50,10 +50,6 @@ import { ReceiveModule } from './receive/receive.module';
         forbidNonWhitelisted: true,
         transform: true,
       }),
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
     },
   ],
 })

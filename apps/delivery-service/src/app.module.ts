@@ -1,10 +1,10 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DeliveryModule } from './delivery';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
-import { Environment, RmqExceptionFilter } from '@app/shared';
+import { Environment } from '@app/shared';
 import { appConfig } from './config/app.config';
 import { axiosConfig } from './config/axios.config';
 import { bitrixConfig } from './config/bitrix.config';
@@ -60,10 +60,6 @@ import { HealthModule } from './health/health.module';
         forbidNonWhitelisted: true,
         transform: true,
       }),
-    },
-    {
-      provide: APP_FILTER,
-      useClass: RmqExceptionFilter,
     },
   ],
 })
