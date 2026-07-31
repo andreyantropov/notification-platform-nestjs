@@ -7,10 +7,8 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiBody,
 } from '@nestjs/swagger';
 import { NotificationResponseDto } from './dto/notification-response.dto';
-import { Mode, Provider } from '@app/shared';
 import { NotificationBatchResponseDto } from './dto/notification-batch-response.dto';
 import { GetClientId } from '../auth/decorators/get-client-id.decorator';
 import { AppAuthGuard } from '../auth/guards/app-auth.guard';
@@ -56,61 +54,10 @@ export class ReceiveController {
     description:
       'Принимает пакет уведомлений (до 50 штук). Для каждого уведомления генерирует UUID, проставляет дату создания и отправляет в очередь.',
   })
-  @ApiBody({
-    type: CreateNotificationBatchDto,
-    examples: {
-      'Валидный пакет (для теста 202)': {
-        summary: 'Полностью валидные данные',
-        value: {
-          items: [
-            {
-              correlationId: 'req-101',
-              contacts: [{ type: Provider.BITRIX, value: '205' }],
-              message: 'Валидное уведомление',
-            },
-            {
-              correlationId: 'req-102',
-              contacts: [
-                { type: Provider.BITRIX, value: '799' },
-                { type: Provider.EMAIL, value: 'user@example.com' },
-              ],
-              message: 'И еще одно валидное уведомление',
-              mode: Mode.BROADCAST,
-            },
-          ],
-        },
-      },
-    },
-  })
   @ApiResponse({
     status: 202,
-    description: 'Все уведомления в пакете успешно прошли валидацию и приняты.',
+    description: 'Пакет уведомлений успешно валидирован и принят в обработку.',
     type: NotificationBatchResponseDto,
-    example: {
-      items: [
-        {
-          id: 'uuid-1',
-          correlationId: 'req-101',
-          clientId: 'client_system_name',
-          createdAt: '2026-07-20T11:00:00.000Z',
-          contacts: [{ type: Provider.BITRIX, value: '205' }],
-          message: 'Валидное уведомление',
-          mode: Mode.SEQUENTIAL,
-        },
-        {
-          id: 'uuid-2',
-          correlationId: 'req-102',
-          clientId: 'client_system_name',
-          createdAt: '2026-07-20T11:00:00.000Z',
-          contacts: [
-            { type: Provider.BITRIX, value: '799' },
-            { type: Provider.EMAIL, value: 'user@example.com' },
-          ],
-          message: 'И еще одно валидное уведомление',
-          mode: Mode.BROADCAST,
-        },
-      ],
-    },
   })
   @ApiResponse({
     status: 400,
