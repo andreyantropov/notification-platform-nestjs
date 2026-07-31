@@ -6,6 +6,8 @@ import { type ConfigType } from '@nestjs/config';
 import { Channel } from '../../channel.abstract';
 import { emailConfig } from '../../../../config/email.config';
 import { ChannelContext } from '../../channel.context';
+import { plainToInstance } from 'class-transformer';
+import { EmailNotifyRequestDto } from '../bitrix/dto/email-notify-request.dto';
 
 @Injectable()
 export class EmailChannel extends Channel {
@@ -42,16 +44,18 @@ export class EmailChannel extends Channel {
     contact: Contact,
     message: string,
   ): Promise<void> {
+    const payload = plainToInstance(EmailNotifyRequestDto, {
+      from: this.from,
+      to: contact.value,
+      subject: this.subject,
+      text: message,
+    });
+
     try {
       await firstValueFrom(
-        from(
-          this.mailerService.sendMail({
-            from: this.from,
-            to: contact.value,
-            subject: this.subject,
-            text: message,
-          }),
-        ).pipe(timeout(this.timeoutMs)),
+        from(this.mailerService.sendMail(payload)).pipe(
+          timeout(this.timeoutMs),
+        ),
       );
     } catch (error) {
       throw new Error(`Канал ${this.type}: Не удалось отправить уведомление`, {

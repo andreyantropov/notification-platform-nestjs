@@ -26,7 +26,7 @@ export const rmqConfig = registerAs('rmq', () => {
   return {
     transport: Transport.RMQ as const,
     options: {
-      urls: config.RABBITMQ_URL,
+      urls: [config.RABBITMQ_URL],
       queue: DELIVERY_NOTIFICATIONS_SEND_QUEUE,
       noAck: false,
       prefetchCount: 1,

@@ -11,11 +11,10 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Mode } from '@app/shared';
-import { CreateNotification } from '../types/create-notification.type';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateNotificationContactDto } from './create-notification-contact.dto';
 
-export class CreateNotificationDto implements CreateNotification {
+export class CreateNotificationDto {
   @ApiProperty({
     example: 'req-12345',
     maxLength: 64,

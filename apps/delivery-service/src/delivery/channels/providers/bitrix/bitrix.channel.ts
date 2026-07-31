@@ -6,6 +6,8 @@ import { type ConfigType } from '@nestjs/config';
 import { Channel } from '../../channel.abstract';
 import { bitrixConfig } from '../../../../config/bitrix.config';
 import { ChannelContext } from '../../channel.context';
+import { plainToInstance } from 'class-transformer';
+import { BitrixNotifyRequestDto } from './dto/bitrix-notify-request.dto';
 
 interface BitrixResponse {
   readonly result?: unknown;
@@ -60,15 +62,17 @@ export class BitrixChannel extends Channel {
     contact: Contact,
     message: string,
   ): Promise<void> {
+    const payload = plainToInstance(BitrixNotifyRequestDto, {
+      user_id: contact.value,
+      message,
+    });
+
     try {
       await firstValueFrom(
         this.httpService
           .post<BitrixResponse>(
             `${this.baseUrl}/im.notify.personal.add.json`,
-            {
-              user_id: contact.value,
-              message,
-            },
+            payload,
             { timeout: this.timeoutMs },
           )
           .pipe(

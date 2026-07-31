@@ -1,6 +1,5 @@
 import { DELIVERY_NOTIFICATIONS_SEND_QUEUE, Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateNotification } from './types/create-notification.type';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
 import { RMQ_CLIENT } from './receive.constants';
@@ -9,6 +8,9 @@ import { SendNotificationDto } from '@app/shared';
 import { MetricService } from 'nestjs-otel';
 import { Counter } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
+import { plainToInstance } from 'class-transformer';
+
+type CreateNotification = Omit<Notification, 'id' | 'clientId' | 'createdAt'>;
 
 @Injectable()
 export class ReceiveService {
@@ -39,15 +41,16 @@ export class ReceiveService {
       'Инициирована обработка входящего уведомления',
     );
 
-    const notification: SendNotificationDto = {
+    const notification: Notification = {
       ...createNotification,
       id: randomUUID(),
       createdAt: new Date().toISOString(),
       clientId,
     };
 
+    const notificationDto = plainToInstance(SendNotificationDto, notification);
     await firstValueFrom(
-      this.rmqClient.emit(DELIVERY_NOTIFICATIONS_SEND_QUEUE, notification),
+      this.rmqClient.emit(DELIVERY_NOTIFICATIONS_SEND_QUEUE, notificationDto),
     );
 
     this.receivedCounter.add(1, { clientId });

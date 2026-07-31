@@ -1,8 +1,8 @@
-import { Contact, Provider } from '@app/shared';
+import { Provider } from '@app/shared';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString, IsNotEmpty, MaxLength } from 'class-validator';
 
-export class CreateNotificationContactDto implements Contact {
+export class CreateNotificationContactDto {
   @ApiProperty({
     enum: Provider,
     example: Provider.BITRIX,

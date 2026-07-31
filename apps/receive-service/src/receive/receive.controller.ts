@@ -45,7 +45,7 @@ export class ReceiveController {
   async createNotification(
     @Body() data: CreateNotificationDto,
     @GetClientId() clientId: string,
-  ) {
+  ): Promise<NotificationResponseDto> {
     return await this.receiveService.receive(data, clientId);
   }
 
@@ -119,7 +119,7 @@ export class ReceiveController {
   async createNotificationBatch(
     @Body() data: CreateNotificationBatchDto,
     @GetClientId() clientId: string,
-  ) {
+  ): Promise<NotificationBatchResponseDto> {
     const result = await this.receiveService.receiveBatch(data.items, clientId);
 
     return { items: result };

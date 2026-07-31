@@ -1,6 +1,5 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DeliveryModule } from './delivery';
 import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
@@ -12,6 +11,7 @@ import { emailConfig } from './config/email.config';
 import { rmqConfig } from './config/rmq.config';
 import { smtpConfig } from './config/smtp.config';
 import { HealthModule } from './health/health.module';
+import { DeliveryModule } from './delivery/delivery.module';
 
 @Module({
   imports: [

@@ -28,8 +28,10 @@ const otelSDK = new NodeSDK({
     [ATTR_SERVER_PORT]: Number(process.env.PORT) || 3000,
     'deployment.environment': process.env.NODE_ENV,
   }),
+
   contextManager: new AsyncLocalStorageContextManager(),
   textMapPropagator: new W3CTraceContextPropagator(),
+
   spanProcessor: new BatchSpanProcessor(
     new OTLPTraceExporter({ url: process.env.TRACES_EXPORTER_URL }),
   ),
@@ -39,6 +41,7 @@ const otelSDK = new NodeSDK({
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({ url: process.env.METRICS_EXPORTER_URL }),
   }),
+
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },

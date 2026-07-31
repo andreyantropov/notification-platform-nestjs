@@ -7,7 +7,6 @@ import {
 } from 'class-validator';
 import { CreateNotificationDto } from './create-notification.dto';
 import { Type } from 'class-transformer';
-import { CreateNotification } from '../types/create-notification.type';
 
 export class CreateNotificationBatchDto {
   @ApiProperty({
@@ -21,5 +20,5 @@ export class CreateNotificationBatchDto {
   @ArrayMaxSize(50)
   @ValidateNested({ each: true })
   @Type(() => CreateNotificationDto)
-  readonly items!: readonly CreateNotification[];
+  readonly items!: readonly CreateNotificationDto[];
 }

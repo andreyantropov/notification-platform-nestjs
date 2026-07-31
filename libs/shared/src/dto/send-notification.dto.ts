@@ -13,10 +13,8 @@ import {
 } from 'class-validator';
 import { Mode } from '../enums/mode.enum';
 import { Provider } from '../enums/provider.enum';
-import { Contact } from '../interfaces/contact.interface';
-import { Notification } from '../interfaces/notification.interface';
 
-class SendNotificationContactDto implements Contact {
+class SendNotificationContactDto {
   @IsEnum(Provider)
   type!: Provider;
 
@@ -26,7 +24,7 @@ class SendNotificationContactDto implements Contact {
   value!: string;
 }
 
-export class SendNotificationDto implements Notification {
+export class SendNotificationDto {
   @IsUUID()
   readonly id!: string;
 
