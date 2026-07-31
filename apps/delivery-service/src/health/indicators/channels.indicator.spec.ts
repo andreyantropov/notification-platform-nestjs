@@ -5,9 +5,9 @@ import { Provider } from '@app/shared';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
-import { Channel } from '../../delivery/channels/channel.abstract';
-import { ChannelContext } from '../../delivery/channels/channel.context';
 import { CHANNELS } from '../../delivery/channels/channels.constants';
+import { Channel } from '../../delivery/channels/core/channel.abstract';
+import { ChannelContext } from '../../delivery/channels/core/channel.context';
 
 describe('ChannelsIndicator', () => {
   let indicator: ChannelsIndicator;

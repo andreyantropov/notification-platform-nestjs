@@ -1,5 +1,5 @@
 import { Contact, Mode, Notification } from '@app/shared';
-import { Channel } from '../channels/channel.abstract';
+import { Channel } from '../channels/core/channel.abstract';
 
 interface Attempt {
   channel: Channel;

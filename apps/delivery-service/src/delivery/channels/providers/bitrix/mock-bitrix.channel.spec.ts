@@ -4,7 +4,7 @@ import { Provider, Contact } from '@app/shared';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
-import { ChannelContext } from '../../channel.context';
+import { ChannelContext } from '../../core/channel.context';
 
 describe('MockBitrixChannel', () => {
   let channel: MockBitrixChannel;

@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Channel } from './channels/channel.abstract';
 import { Notification } from '@app/shared';
 import { StrategyFactory } from './strategies/strategy.factory';
 import { MetricService } from 'nestjs-otel';
 import { Logger } from 'nestjs-pino';
 import { Counter } from '@opentelemetry/api';
 import { CHANNELS } from './channels/channels.constants';
+import { Channel } from './channels/core/channel.abstract';
 
 @Injectable()
 export class DeliveryService {

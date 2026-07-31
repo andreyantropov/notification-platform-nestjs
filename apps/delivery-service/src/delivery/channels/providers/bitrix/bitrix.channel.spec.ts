@@ -8,7 +8,7 @@ import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 import { bitrixConfig } from '../../../../config/bitrix.config';
-import { ChannelContext } from '../../channel.context';
+import { ChannelContext } from '../../core/channel.context';
 
 interface BitrixResponse {
   readonly result?: unknown;

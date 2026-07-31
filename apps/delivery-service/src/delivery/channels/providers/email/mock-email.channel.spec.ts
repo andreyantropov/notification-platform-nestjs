@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockEmailChannel } from './mock-email.channel';
 import { Provider, Contact } from '@app/shared';
-import { ChannelContext } from '../../channel.context';
 import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
+import { ChannelContext } from '../../core/channel.context';
 
 describe('MockEmailChannel', () => {
   let channel: MockEmailChannel;

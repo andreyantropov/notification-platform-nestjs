@@ -7,6 +7,7 @@ import { EmailChannel } from './email.channel';
 import { MockEmailChannel } from './mock-email.channel';
 import { appConfig } from '../../../../config/app.config';
 import { smtpConfig } from '../../../../config/smtp.config';
+import { ChannelsCoreModule } from '../../core/channels-core.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { smtpConfig } from '../../../../config/smtp.config';
       inject: [smtpConfig.KEY],
       useFactory: (config: ConfigType<typeof smtpConfig>) => config,
     }),
+    ChannelsCoreModule,
   ],
   providers: [
     EmailChannel,

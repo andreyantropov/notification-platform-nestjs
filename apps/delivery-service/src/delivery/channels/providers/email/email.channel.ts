@@ -3,11 +3,11 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { from, firstValueFrom, timeout } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
 import { type ConfigType } from '@nestjs/config';
-import { Channel } from '../../channel.abstract';
 import { emailConfig } from '../../../../config/email.config';
-import { ChannelContext } from '../../channel.context';
 import { plainToInstance } from 'class-transformer';
 import { EmailNotifyRequestDto } from './dto/email-notify-request.dto';
+import { Channel } from '../../core/channel.abstract';
+import { ChannelContext } from '../../core/channel.context';
 
 @Injectable()
 export class EmailChannel extends Channel {

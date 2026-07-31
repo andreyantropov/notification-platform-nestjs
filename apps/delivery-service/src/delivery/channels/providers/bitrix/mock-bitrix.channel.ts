@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Provider } from '@app/shared';
 import { Contact } from '@app/shared';
-import { Channel } from '../../channel.abstract';
-import { ChannelContext } from '../../channel.context';
+import { Channel } from '../../core/channel.abstract';
+import { ChannelContext } from '../../core/channel.context';
 
 @Injectable()
 export class MockBitrixChannel extends Channel {

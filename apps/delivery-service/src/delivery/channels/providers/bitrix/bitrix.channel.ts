@@ -3,11 +3,11 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { Contact, Provider } from '@app/shared';
 import { type ConfigType } from '@nestjs/config';
-import { Channel } from '../../channel.abstract';
 import { bitrixConfig } from '../../../../config/bitrix.config';
-import { ChannelContext } from '../../channel.context';
 import { plainToInstance } from 'class-transformer';
 import { BitrixNotifyRequestDto } from './dto/bitrix-notify-request.dto';
+import { Channel } from '../../core/channel.abstract';
+import { ChannelContext } from '../../core/channel.context';
 
 interface BitrixResponse {
   readonly result?: unknown;

@@ -6,8 +6,7 @@ import { Counter, Histogram } from '@opentelemetry/api';
 import { Logger } from 'nestjs-pino';
 import { MetricService } from 'nestjs-otel';
 import { emailConfig } from '../../../../config/email.config';
-import { ChannelContext } from '../../channel.context';
-
+import { ChannelContext } from '../../core/channel.context';
 describe('EmailChannel', () => {
   let channel: EmailChannel;
   let mockSendMail: jest.Mock;

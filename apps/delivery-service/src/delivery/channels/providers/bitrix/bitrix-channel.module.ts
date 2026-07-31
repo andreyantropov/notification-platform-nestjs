@@ -7,6 +7,7 @@ import { BitrixChannel } from './bitrix.channel';
 import { MockBitrixChannel } from './mock-bitrix.channel';
 import { appConfig } from '../../../../config/app.config';
 import { axiosConfig } from '../../../../config/axios.config';
+import { ChannelsCoreModule } from '../../core/channels-core.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { axiosConfig } from '../../../../config/axios.config';
       inject: [axiosConfig.KEY],
       useFactory: (config: ConfigType<typeof axiosConfig>) => config,
     }),
+    ChannelsCoreModule,
   ],
   providers: [
     BitrixChannel,

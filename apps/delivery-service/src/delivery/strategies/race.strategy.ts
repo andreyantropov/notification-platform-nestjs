@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Channel } from '../channels/channel.abstract';
 import { Mode, Notification } from '@app/shared';
 import { Strategy } from './strategy.abstract';
+import { Channel } from '../channels/core/channel.abstract';
 
 @Injectable()
 export class RaceStrategy extends Strategy {
