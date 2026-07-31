@@ -54,7 +54,7 @@ services:
       args:
         SERVICE_NAME: receive-service
     env_file:
-      - services/receive-service/.env.dev
+      - services/receive-service/.env.development
     environment:
       - BROKER_URL=amqp://dev_user:dev_password@rabbitmq:5672
     ports:
@@ -88,7 +88,7 @@ services:
       args:
         SERVICE_NAME: delivery-service
     env_file:
-      - services/delivery-service/.env.dev
+      - services/delivery-service/.env.development
     environment:
       - BROKER_URL=amqp://dev_user:dev_password@rabbitmq:5672
     ports:
