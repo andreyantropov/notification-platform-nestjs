@@ -137,7 +137,7 @@ describe('Channel', () => {
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         {
-          err: testError,
+          error: testError,
           provider: Provider.EMAIL,
           contact: 'test@test.com',
         },

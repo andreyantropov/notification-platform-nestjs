@@ -1,5 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
+import {
+  HealthCheck,
+  HealthCheckResult,
+  HealthCheckService,
+} from '@nestjs/terminus';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { ChannelsIndicator } from './indicators/channels.indicator';
 
@@ -13,7 +17,7 @@ export class HealthController {
 
   @Get('live')
   @HealthCheck()
-  async liveness() {
+  async liveness(): Promise<HealthCheckResult> {
     return this.healthCheckService.check([
       () => ({ application: { status: 'up' } }),
     ]);
@@ -21,7 +25,7 @@ export class HealthController {
 
   @Get('ready')
   @HealthCheck()
-  async readiness() {
+  async readiness(): Promise<HealthCheckResult> {
     return this.healthCheckService.check([
       () => this.channelsIndicator.isHealthy('channels'),
     ]);

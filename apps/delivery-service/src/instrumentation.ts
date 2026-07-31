@@ -45,6 +45,7 @@ const otelSDK = new NodeSDK({
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },
+      '@opentelemetry/instrumentation-http': { enabled: false },
     }),
     new FastifyOtelInstrumentation({
       registerOnInitialization: true,
@@ -55,9 +56,7 @@ const otelSDK = new NodeSDK({
 
 otelSDK.start();
 
-const shutdownSignals = ['SIGTERM', 'SIGINT'];
-
-shutdownSignals.forEach((signal) => {
+['SIGTERM', 'SIGINT'].forEach((signal) => {
   process.on(signal, () => {
     otelSDK.shutdown().catch(() => {
       process.exit(1);

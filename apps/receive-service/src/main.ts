@@ -25,7 +25,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   app.setGlobalPrefix('api/v1', {
-    exclude: [{ path: 'health/*path', method: RequestMethod.GET }],
+    exclude: [{ path: 'health/*', method: RequestMethod.GET }],
   });
 
   setupSwagger(app);

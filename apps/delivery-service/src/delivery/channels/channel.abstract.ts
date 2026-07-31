@@ -41,7 +41,6 @@ export abstract class Channel {
   async send(contact: Contact, message: string): Promise<void> {
     await this.limiter.schedule(async () => {
       const startTime = Date.now();
-
       const provider = this.type;
       let status = 'success';
 
@@ -61,7 +60,7 @@ export abstract class Channel {
         status = 'error';
         this.ctx.logger.warn(
           {
-            err: error,
+            error,
             provider,
             contact: contact.value,
           },

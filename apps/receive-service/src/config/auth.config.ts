@@ -30,8 +30,16 @@ export const authConfig = registerAs('auth', () => {
   }
 
   return {
+    ignoreExpiration: false,
     audience: config.AUTH_AUDIENCE,
-    issuerUrl: config.AUTH_ISSUER_URL,
-    jwksUri: config.AUTH_JWKS_URI,
+    issuer: config.AUTH_ISSUER_URL,
+    jwksOptions: {
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 10,
+      cacheMaxAge: 15 * 60 * 1_000,
+      timeout: 5_000,
+      jwksUri: config.AUTH_JWKS_URI,
+    },
   };
 });

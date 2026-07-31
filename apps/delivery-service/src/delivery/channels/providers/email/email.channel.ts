@@ -7,7 +7,7 @@ import { Channel } from '../../channel.abstract';
 import { emailConfig } from '../../../../config/email.config';
 import { ChannelContext } from '../../channel.context';
 import { plainToInstance } from 'class-transformer';
-import { EmailNotifyRequestDto } from '../bitrix/dto/email-notify-request.dto';
+import { EmailNotifyRequestDto } from './dto/email-notify-request.dto';
 
 @Injectable()
 export class EmailChannel extends Channel {

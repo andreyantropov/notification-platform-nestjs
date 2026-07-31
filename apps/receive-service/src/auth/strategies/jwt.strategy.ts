@@ -15,21 +15,19 @@ interface KeycloakJwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     @Inject(authConfig.KEY)
-    { audience, issuerUrl, jwksUri }: ConfigType<typeof authConfig>,
+    {
+      ignoreExpiration,
+      audience,
+      issuer,
+      jwksOptions,
+    }: ConfigType<typeof authConfig>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      audience: audience,
-      issuer: issuerUrl,
-      secretOrKeyProvider: passportJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 10,
-        cacheMaxAge: 15 * 60 * 1_000,
-        timeout: 5_000,
-        jwksUri: jwksUri,
-      }),
+      ignoreExpiration,
+      audience,
+      issuer,
+      secretOrKeyProvider: passportJwtSecret(jwksOptions),
     });
   }
 

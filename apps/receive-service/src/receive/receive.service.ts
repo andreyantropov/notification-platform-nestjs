@@ -82,6 +82,14 @@ export class ReceiveService {
     const promises = createNotifications.map((item) =>
       this.receive(item, clientId),
     );
+
+    this.logger.log(
+      {
+        batch_size: createNotifications.length,
+      },
+      'Пакет уведомлений успешно поставлен в очередь',
+    );
+
     return await Promise.all(promises);
   }
 }
