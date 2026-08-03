@@ -9,6 +9,7 @@ import {
 import { setupSwagger } from './config/swagger.config';
 import { Logger } from 'nestjs-pino';
 import { LoggingInterceptor } from '@app/shared';
+import { VersioningType } from '@nestjs/common';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -26,6 +27,11 @@ async function bootstrap(): Promise<void> {
 
   app.setGlobalPrefix('api', {
     exclude: ['health/{*path}'],
+  });
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   setupSwagger(app);

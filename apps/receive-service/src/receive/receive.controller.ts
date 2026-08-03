@@ -18,7 +18,7 @@ import { GetClientId } from '../auth/decorators/get-client-id.decorator';
   status: 401,
   description: 'Неавторизованный запрос (отсутствует или просрочен JWT).',
 })
-@Controller('v1/notifications')
+@Controller('notifications')
 export class ReceiveController {
   constructor(private readonly receiveService: ReceiveService) {}
 
