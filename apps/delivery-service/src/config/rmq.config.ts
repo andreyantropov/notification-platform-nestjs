@@ -1,13 +1,16 @@
 import { Transport } from '@nestjs/microservices';
 import { registerAs } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
-import { IsUrl, IsNotEmpty, validateSync } from 'class-validator';
-import { DELIVERY_NOTIFICATIONS_SEND_QUEUE } from '@app/shared';
+import { IsUrl, IsNotEmpty, validateSync, IsString } from 'class-validator';
 
 class Env {
   @IsUrl({ require_tld: false, protocols: ['amqp', 'amqps'] })
   @IsNotEmpty()
-  RABBITMQ_URL!: string;
+  RMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RMQ_QUEUE!: string;
 }
 
 export const rmqConfig = registerAs('rmq', () => {
@@ -26,8 +29,8 @@ export const rmqConfig = registerAs('rmq', () => {
   return {
     transport: Transport.RMQ as const,
     options: {
-      urls: [config.RABBITMQ_URL],
-      queue: DELIVERY_NOTIFICATIONS_SEND_QUEUE,
+      urls: [config.RMQ_URL],
+      queue: config.RMQ_QUEUE,
       noAck: false,
       prefetchCount: 1,
       noAssert: true,

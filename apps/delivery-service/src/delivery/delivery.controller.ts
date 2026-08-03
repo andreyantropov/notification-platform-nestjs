@@ -3,7 +3,7 @@ import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { DeliveryService } from './delivery.service';
 import { Channel, Message } from 'amqplib';
 import {
-  DELIVERY_NOTIFICATIONS_SEND_QUEUE,
+  RECEIVE_NOTIFICATION_RECEIVED,
   SendNotificationDto,
 } from '@app/shared';
 
@@ -11,7 +11,7 @@ import {
 export class DeliveryController {
   constructor(private readonly deliveryService: DeliveryService) {}
 
-  @EventPattern(DELIVERY_NOTIFICATIONS_SEND_QUEUE)
+  @EventPattern(RECEIVE_NOTIFICATION_RECEIVED)
   async handleNotification(
     @Payload() data: SendNotificationDto,
     @Ctx() context: RmqContext,

@@ -4,6 +4,17 @@
       "name": "/"
     }
   ],
+  "exchanges": [
+    {
+      "name": "receive.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
   "queues": [
     {
       "name": "delivery.notifications.send",
@@ -24,6 +35,16 @@
       "arguments": {
         "x-queue-type": "classic"
       }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "receive.events",
+      "vhost": "/",
+      "destination": "delivery.notifications.send",
+      "destination_type": "queue",
+      "routing_key": "receive.notification.received",
+      "arguments": {}
     }
   ]
 }
