@@ -5,9 +5,11 @@ import {
   HealthCheckService,
 } from '@nestjs/terminus';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiExcludeController()
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(private readonly healthCheckService: HealthCheckService) {}
 

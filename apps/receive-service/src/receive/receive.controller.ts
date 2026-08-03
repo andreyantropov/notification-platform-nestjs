@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { ReceiveService } from './receive.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateNotificationBatchDto } from './dto/create-notification-batch.dto';
@@ -11,7 +11,6 @@ import {
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { NotificationBatchResponseDto } from './dto/notification-batch-response.dto';
 import { GetClientId } from '../auth/decorators/get-client-id.decorator';
-import { AppAuthGuard } from '../auth/guards/app-auth.guard';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -19,8 +18,7 @@ import { AppAuthGuard } from '../auth/guards/app-auth.guard';
   status: 401,
   description: 'Неавторизованный запрос (отсутствует или просрочен JWT).',
 })
-@Controller('notifications')
-@UseGuards(AppAuthGuard)
+@Controller('v1/notifications')
 export class ReceiveController {
   constructor(private readonly receiveService: ReceiveService) {}
 

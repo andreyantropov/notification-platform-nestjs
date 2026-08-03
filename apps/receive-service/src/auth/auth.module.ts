@@ -3,10 +3,10 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MockJwtAuthGuard } from './guards/mock-jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { AppAuthGuard } from './guards/app-auth.guard';
 import { Environment } from '@app/shared';
 import { ConfigType } from '@nestjs/config';
 import { appConfig } from '../config/app.config';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
@@ -15,7 +15,7 @@ import { appConfig } from '../config/app.config';
     MockJwtAuthGuard,
     JwtAuthGuard,
     {
-      provide: AppAuthGuard,
+      provide: APP_GUARD,
       inject: [appConfig.KEY, MockJwtAuthGuard, JwtAuthGuard],
       useFactory: (
         config: ConfigType<typeof appConfig>,
@@ -28,6 +28,5 @@ import { appConfig } from '../config/app.config';
       },
     },
   ],
-  exports: [AppAuthGuard],
 })
 export class AuthModule {}
