@@ -1,10 +1,13 @@
 {
-  "name": "notification-service-nestjs",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "notification-platform-nestjs",
+  "version": "1.0.0",
+  "description": "Событийно-ориентированная платформа уведомлений. Обеспечивает независимый прием, обогащение данных и стратегическую маршрутизацию по каналам доставки.",
+  "author": {
+    "name": "Andrey Antropov",
+    "email": "andreyantropov.1994@gmail.com"
+  },
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build:receive-service": "nest build receive-service",
     "build:delivery-service": "nest build delivery-service",
