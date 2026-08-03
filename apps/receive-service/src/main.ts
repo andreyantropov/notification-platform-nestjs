@@ -1,3 +1,4 @@
+import './instrumentation';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
@@ -6,7 +7,6 @@ import {
   FastifyAdapter,
 } from '@nestjs/platform-fastify';
 import { setupSwagger } from './config/swagger.config';
-import { RequestMethod } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import { LoggingInterceptor } from '@app/shared';
 
@@ -25,7 +25,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   app.setGlobalPrefix('api', {
-    exclude: [{ path: 'health/*', method: RequestMethod.GET }],
+    exclude: ['health/{*path}'],
   });
 
   setupSwagger(app);
