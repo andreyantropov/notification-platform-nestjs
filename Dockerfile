@@ -28,9 +28,9 @@ COPY --from=builder /app/node_modules ./node_modules
 
 ARG SERVICE_NAME
 
-COPY --from=builder /app/dist/apps/${SERVICE_NAME}-service ./dist
+COPY --from=builder /app/dist/apps/${SERVICE_NAME} ./dist
 COPY package.json ./
 
-ENV SERVICE=${SERVICE_NAME}-service
+ENV SERVICE=${SERVICE_NAME}
 
 CMD ["node", "--import", "./dist/instrumentation.js", "./dist/main.js"]
