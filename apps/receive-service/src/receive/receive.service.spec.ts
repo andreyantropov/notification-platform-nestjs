@@ -6,7 +6,7 @@ import {
   Notification,
   Mode,
   Provider,
-  RECEIVE_NOTIFICATION_RECEIVED,
+  NOTIFICATION_RECEIVED,
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
 import { Logger } from 'nestjs-pino';
@@ -115,7 +115,7 @@ describe('ReceiveService', () => {
 
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(1);
       expect(clientProxyMock.emit).toHaveBeenCalledWith(
-        RECEIVE_NOTIFICATION_RECEIVED,
+        NOTIFICATION_RECEIVED,
         expect.objectContaining({
           id: 'mocked-uuid-value',
           clientId: mockClientId,

@@ -1,4 +1,4 @@
-import { RECEIVE_NOTIFICATION_RECEIVED, Notification } from '@app/shared';
+import { NOTIFICATION_RECEIVED, Notification } from '@app/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { ClientProxy } from '@nestjs/microservices';
@@ -51,7 +51,7 @@ export class ReceiveService {
     const notificationDto = plainToInstance(SendNotificationDto, notification);
 
     await firstValueFrom(
-      this.rmqClient.emit(RECEIVE_NOTIFICATION_RECEIVED, notificationDto),
+      this.rmqClient.emit(NOTIFICATION_RECEIVED, notificationDto),
     );
 
     this.receivedCounter.add(1, { clientId });

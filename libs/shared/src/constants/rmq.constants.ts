@@ -1,1 +1,1 @@
-export const RECEIVE_NOTIFICATION_RECEIVED = 'receive.notification.received';
+export const NOTIFICATION_RECEIVED = 'notification.received';
