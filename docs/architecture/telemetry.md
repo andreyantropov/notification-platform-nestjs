@@ -1,159 +1,165 @@
 # 📡 Телеметрия и Наблюдаемость
 
-Сервис уведомлений обеспечивает полную **наблюдаемость (observability)** через **структурированное логирование**, **сквозную корреляцию**, **сбор метрик** и **централизованный экспорт** с использованием стандарта **OpenTelemetry**.
+Сервис уведомлений обеспечивает полную **наблюдаемость (observability)** через интеграцию **OpenTelemetry** в экосистему NestJS. Телеметрия строится на трёх столпах: логирование, метрики и трассировка, экспортируемые по стандарту **OTLP/HTTP**.
 
 Архитектура телеметрии построена на следующих принципах:
 
-- ✅ **Стандартизация**: Единый стандарт OTel для логов, трейсов и метрик.
-- ✅ **Независимость от бэкенда**: Приложение экспортирует данные в OTLP, не зная о конечном хранилище (маршрутизацию решает OTel Collector).
-- ✅ **Чистота бизнес-логики**: Сбор телеметрии вынесен за пределы домена через **функциональные декораторы** и унифицированные интерфейсы (`Logger`, `Meter`, `Tracer`).
-- ✅ **Сквозная корреляция**: Все события связаны через `trace_id` и `span_id`, что позволяет отследить путь уведомления от HTTP-запроса до доставки в канал.
-- ✅ **Отказоустойчивость**: При недоступности OTel Collector логи дублируются в `stdout`, не блокируя работу сервиса.
+- ✅ **NestJS-native**: Используется `nestjs-otel` для бесшовной интеграции с DI-контейнером, декораторами и lifecycle-хуками фреймворка.
+- ✅ **Независимость от бэкенда**: Приложение экспортирует данные по протоколу OTLP/HTTP, не зная о конечном хранилище (маршрутизацию решает OTel Collector).
+- ✅ **Сквозная корреляция**: Все события связаны через `trace_id` и `span_id` (W3C Trace Context), что позволяет отследить путь уведомления от HTTP-запроса до доставки в канал.
+- ✅ **Отказоустойчивость**: При недоступности OTel Collector логи дублируются в `stdout` (Pino), не блокируя работу сервиса. Экспортёр работает в batch-режиме.
 
 ---
 
 ## 🏗 Архитектура сбора данных
 
-⚠️ Критическое требование к запуску:
+### ⚠️ Критическое требование к запуску
 
-Для корректной работы автоматической инструментации (Express, HTTP, DNS) модуль инициализации OpenTelemetry должен быть выполнен самым первым.
-В `package.json` это обеспечивается флагом `--import`:
+Модуль инициализации OpenTelemetry (`otelSDK.start()`) должен быть выполнен самым первым в точке входа приложения, до импорта любых бизнес-модулей.
 
-```
-bash
-# Development
-node --import ./src/instrumentation.ts src/index.ts
-
-# Production (после сборки)
-node --import ./dist/instrumentation.js dist/index.js
-```
-
-Если этот шаг пропустить, SDK не успеет «перехватить» модули Node.js, и телеметрия будет неполной.
+### Компоненты наблюдаемости
 
 1.  **Логирование**:
-    - Реализовано на базе `winston`.
-    - Бизнес-код работает только с абстракцией `Logger`, передавая структурированные объекты.
-    - Транспорт `@opentelemetry/winston-transport` автоматически обогащает логи контекстом трейса (`trace_id`, `span_id`).
+    - Реализовано на базе **Pino** с автоматической инструментацией через `@opentelemetry/instrumentation-pino`.
+    - Бизнес-код использует стандартный NestJS `Logger` (или прямой вызов Pino). Логи могут быть произвольными структурированными объектами — жёсткого контракта на поля нет.
+    - Инструментация автоматически обогащает каждый лог контекстом активного трейса (`trace_id`, `span_id`).
+    - Логи экспортируются в OTel Collector через `OTLPLogExporter` (HTTP) в batch-режиме.
 
 2.  **Метрики**:
-    - Сбор осуществляется через интерфейс `Meter`, инкапсулирующий OTel SDK.
-    - Декораторы автоматически замеряют латентность операций и инкрементируют счетчики ошибок/успехов.
+    - Сбор осуществляется через **`MetricService`** из `nestjs-otel`, внедряемый через DI.
+    - Метрики создаются и обновляются напрямую через API `MetricService` (Counter, Histogram, Gauge, UpDownCounter).
+    - Экспорт через `OTLPMetricExporter` (HTTP) с периодической отправкой (`PeriodicExportingMetricReader`).
+    - Системные метрики собираются средствами Docker.
 
 3.  **Трассировка**:
-    - **Автоматическая**: Инструментация Express (`@opentelemetry/instrumentation-express`) и исходящих HTTP-вызовов.
-    - **Ручная**: Критические участки кода (вызовы каналов) явно оборачиваются в спаны через инжектируемый `Tracer`.
+    - **Автоматическая**: `@fastify/otel` инструментирует входящие HTTP-запросы. `nestjs-otel` автоматически создаёт спаны для контроллеров, сервисов, guards, interceptors и middleware.
+    - **Ручная**: Для кастомных участков кода используются декораторы `@Span()` из `nestjs-otel` или прямой доступ к `Tracer` через DI.
+    - **Контекст**: `AsyncLocalStorageContextManager` обеспечивает корректную пропагацию трейса через асинхронные вызовы.
+    - **Пропагация**: W3C Trace Context для сквозной трассировки между сервисами.
+    - Спаны экспортируются через `OTLPTraceExporter` (HTTP) в batch-режиме.
 
-4.  **Экспорт**:
-    - Данные отправляются по протоколу **OTLP/HTTP** в **OTel Collector**.
-    - Collector агрегирует данные и маршрутизирует их в бэкенды: **Prometheus** (метрики), **Tempo** (трейсы), **Loki** (логи).
+4.  **Экспорт и Graceful Shutdown**:
+    - Все три сигнала отправляются по протоколу OTLP/HTTP в OTel Collector.
+    - При получении `SIGTERM` / `SIGINT` NestJS выполняет graceful shutdown, в ходе которого OTel SDK flush-ит все незавершённые batch'и.
 
-> ⚙️ Конфигурация экспортеров и сэмплинга задается через переменные окружения.
+> ⚙️ URL-адреса экспортеров задаются через переменные окружения: `TRACES_EXPORTER_URL`, `LOGS_EXPORTER_URL`, `METRICS_EXPORTER_URL`.
 
 ---
 
-## 🔌 Контракты телеметрии
+## 🔌 Использование телеметрии в коде
 
-Взаимодействие с системой телеметрии строго типизировано. Это позволяет менять реализацию (транспорт, бэкенд) без изменения бизнес-логики.
+### 1. Логирование
 
-### 1. Логирование (`Logger`)
-
-Логирование асинхронное. В методы передаются не строки, а **структурированные объекты** типа `Log`.
+Логи — это произвольные структурированные объекты. Нет обязательного интерфейса или фиксированного набора полей. Пишите то, что нужно для диагностики.
 
 ```typescript
-interface Logger {
-  readonly debug: (log: Log) => Promise<void>;
-  readonly info: (log: Log) => Promise<void>;
-  readonly warn: (log: Log) => Promise<void>;
-  readonly error: (log: Log) => Promise<void>;
+// Пример: лог может быть любым
+this.logger.log({
+  message: 'Уведомление отправлено',
+  id: 'uuid-123',
+  channel: 'email',
+  durationMs: 245,
+  strategy: 'broadcast',
+});
+
+// Или просто строка — Pino обернёт её в { msg: "..." }
+this.logger.warn('Канал недоступен, переключаемся на фолбэк');
+```
+
+> 💡 Поля `trace_id`, `span_id`, `service.name`, `service.version`, `deployment.environment` добавляются автоматически инструментацией Pino и ресурсом OTel. Не передавайте их вручную.
+
+> ⚠️ **Безопасность**: Никогда не передавайте в логи пароли, токены доступа или персональные данные (PII).
+
+---
+
+### 2. Метрики (`MetricService`)
+
+Метрики создаются и обновляются через `MetricService`, внедряемый через DI:
+
+```typescript
+import { MetricService } from 'nestjs-otel';
+
+@Injectable()
+export class DeliveryService {
+  private readonly sendCounter: Counter;
+  private readonly durationHistogram: Histogram;
+
+  constructor(protected readonly metricService: MetricService) {
+    this.sendCounter = this.metricService.getCounter(
+      'notification_channel_delivery_attempts_total',
+      { description: 'Количество попыток отправки по провайдерам' },
+    );
+    this.durationHistogram = this.metricService.getHistogram(
+      'notification_channel_delivery_duration_ms',
+      { description: 'Длительность отправки внешним шлюзом', unit: 'ms' },
+    );
+  }
+
+  async send(contact: Contact, message: string): Promise<void> {
+    const startTime = Date.now();
+    const provider = this.type;
+    let status = 'success';
+
+    try {
+      await this.performSend(contact, message);
+    } catch (error) {
+      status = 'error';
+      throw error;
+    } finally {
+      const duration = Date.now() - startTime;
+      this.sendCounter.add(1, { provider, status });
+      this.durationHistogram.record(duration, { provider, status });
+    }
+  }
 }
 ```
 
-**Структура объекта `Log`:**
+#### Реестр бизнес-метрик
 
-| Поле         | Тип      | Обязательность | Описание                                                               |
-| :----------- | :------- | :------------- | :--------------------------------------------------------------------- |
-| `message`    | `string` | **Да**         | Краткое описание события (человекочитаемое).                           |
-| `eventType`  | `Enum`   | Нет            | Семантический тип события (напр. `REQUEST`). Для фильтрации в Grafana. |
-| `trigger`    | `Enum`   | Нет            | Источник события (`API`, `CRON`, `MANUAL`).                            |
-| `durationMs` | `number` | Нет            | Время выполнения операции. **Критично для расчета SLO.**               |
-| `details`    | `object` | Нет            | Контекст (ID уведомления, стратегия). **Запрещено передавать PII!**    |
-| `error`      | `Error`  | Нет            | Объект ошибки. Автоматически сериализуется со стеком вызовов.          |
-
-> 💡 Системные поля (`trace_id`, `service.name`, `timestamp`, `deployment.environment`) добавляются транспортом автоматически.
+| Имя метрики                                    | Тип       | Описание                                      | Лейблы               |
+| :--------------------------------------------- | :-------- | :-------------------------------------------- | :------------------- |
+| `notification_incoming_received_total`         | Counter   | Принятые и поставленные в очередь уведомления | `clientId`           |
+| `notification_strategy_executions_total`       | Counter   | Запуски бизнес-стратегий                      | `strategy_type`      |
+| `notification_channel_delivery_attempts_total` | Counter   | Попытки отправки по провайдерам               | `provider`, `status` |
+| `notification_channel_delivery_duration_ms`    | Histogram | Длительность отправки внешним шлюзом          | `provider`, `status` |
 
 ---
 
-### 2. Метрики (`Meter`)
+### 3. Трассировка
 
-Интерфейс универсален и поддерживает работу с любыми типами метрик OTel (Counter, Histogram, Gauge).
+В большинстве случаев трассировка работает **автоматически** благодаря `nestjs-otel` и `@fastify/otel`. Ручное создание спанов требуется только для нестандартных участков кода.
+
+#### Декоратор `@Span()` (предпочтительный способ)
 
 ```typescript
-interface Meter {
-  // Инкремент счетчика (Counter)
-  readonly increment: (
-    name: string,
-    labels?: Record<string, string | number | boolean>,
-  ) => void;
+import { Span } from 'nestjs-otel';
 
-  // Запись значения (Histogram / Summary)
-  readonly record: (
-    name: string,
-    value: number,
-    labels?: Record<string, string | number | boolean>,
-  ) => void;
-
-  // Установка текущего значения (Gauge)
-  readonly gauge: (
-    name: string,
-    value: number,
-    labels?: Record<string, string | number | boolean>,
-  ) => void;
+@Injectable()
+export class StrategyExecutor {
+  @Span('strategy.execute')
+  async execute(notification: Notification): Promise<void> {
+    // Спан создаётся и завершается автоматически
+  }
 }
 ```
 
-**Реестр основных метрик:**
-Несмотря на универсальность интерфейса, в сервисе принят единый стандарт именования.
-
-| Имя метрики                            | Тип       | Описание                                                                          | Обязательные лейблы                              |
-| :------------------------------------- | :-------- | :-------------------------------------------------------------------------------- | :----------------------------------------------- |
-| `http_requests_total`                  | Counter   | Количество запросов к сервису                                                     | `statusCode`                                     |
-| `http_requests_duration_ms`            | Histogram | Латентность обработки запроса                                                     | `statusCode`                                     |
-| `notifications_sent_total`             | Counter   | Количество физических отправок во внешний канал                                   | `status` (success/error), `channel` (тип канала) |
-| `notifications_sent_duration_ms`       | Histogram | Латентность внешнего вызова (время ответа SMTP или Bitrix API)                    | `status`, `channel`                              |
-| `notifications_delivered_total`        | Counter   | Количество попыток выполнения стратегии доставки.                                 | `status`, `strategy`                             |
-| `notifications_delivered_duration_ms`  | Histogram | Полное время выполнения стратегии (время жизни уведомления внутри сервиса)        | `status`, `strategy`                             |
-| `notifications_received_total`         | Counter   | Количество уведомлений, принятых сервисом (входная точка API)                     | `mode` (single/batch),`status`, `initiator`      |
-| `notifications_received_duration_ms`   | Histogram | Время обработки входящего запроса (валидация + постановка в работу)               | `mode`, `status`, `initiator`                    |
-| `notifications_consumed_total`         | Counter   | Количество уведомлений, потребленных из очереди (и обработанных delivery-service) | `status`                                         |
-| `notifications_consumed_duration_ms`   | Histogram | Время потребления и обработки одного уведомления                                  | `status`                                         |
-| `notifications_dispatched_total`       | Counter   | Количество уведомлений, распределенных по очередям                                | `status`                                         |
-| `notifications_dispatched_duration_ms` | Histogram | Время публикации распределения уведомления в очередь                              | `status`                                         |
-| `notifications_published_total`        | Counter   | Количество уведомлений, опубликованных в очереди                                  | `status`                                         |
-| `notifications_published_duration_ms`  | Histogram | Время публикации уведомления в очередь                                            | `status`                                         |
-
----
-
-### 3. Трассировка (`Tracer`)
-
-Интерфейс для ручного управления контекстом трейсинга. Критически важен для асинхронных процессов.
+#### Прямой доступ к Tracer (для динамических спанов)
 
 ```typescript
-interface Tracer {
-  // Запуск активного спана (автоматически управляет контекстом внутри fn)
-  readonly startActiveSpan: <T>(
-    name: string,
-    fn: () => Promise<T>,
-    options?: { kind?: SpanKind; attributes?: Record<string, string> },
-  ) => Promise<T>;
+import { TraceService } from 'nestjs-otel';
 
-  // Восстановление контекста из заголовков (для Consumer'ов очередей!)
-  readonly continueTrace: <T>(
-    headers: Record<string, string>,
-    fn: () => Promise<T>,
-  ) => Promise<T>;
+@Injectable()
+export class ChannelDispatcher {
+  constructor(private readonly traceService: TraceService) {}
 
-  // Получение текущих заголовков для проксирования трейса downstream
-  readonly getTraceHeaders: () => Record<string, string>;
+  async dispatch(channel: string, payload: unknown): Promise<void> {
+    return this.traceService.startActiveSpan(
+      `channel.${channel}.send`,
+      async () => {
+        // Логика отправки
+      },
+    );
+  }
 }
 ```
 
@@ -161,20 +167,23 @@ interface Tracer {
 
 ## ✅ Рекомендации разработчику
 
-1.  **Используйте `eventType`**: Группируйте логи семантически.
-2.  **Замеряйте длительность**: Всегда передавайте `durationMs` для операций ввода-вывода. Это основа для построения графиков производительности.
-3.  **Безопасность**: Никогда не передавайте в `details` пароли, токены доступа или персональные данные (PII).
-4.  **Асинхронность**: Логгер и метрики работают асинхронно. Не ожидайте их завершения в критическом пути, если это не требуется (декораторы обрабатывают это сами).
-5.  **Универсальность Meter**: Не придумывайте новые имена метрик "на лету". Используйте существующие из реестра или согласовывайте новые, чтобы избежать дублирования.
+1.  **Логи свободны**: Пишите в логи всё, что полезно для диагностики. Не пытайтесь подгонять под жёсткий интерфейс. Но **никогда не пишите PII**.
+2.  **Метрики через MetricService**: Не используйте OTel SDK напрямую. Всегда получайте инструменты через `MetricService` — это обеспечивает корректную интеграцию с NestJS DI и lifecycle.
+3.  **Трейсы через декораторы**: Используйте `@Span()` вместо ручного управления спанами, когда это возможно. Это уменьшает boilerplate и исключает ошибки незакрытых спанов.
+4.  **Единый реестр метрик**: Не придумывайте новые имена «на лету». Согласовывайте новые метрики, чтобы избежать дублирования и роста cardinality.
+5.  **Graceful Shutdown**: Не вызывайте `process.exit()` напрямую. Используйте сигналы `SIGTERM`/`SIGINT`, чтобы NestJS и OTel SDK успели корректно завершить работу и flush-ить телеметрию.
 
 ---
 
 ## 🧩 Интеграции
 
-| Компонент          | Роль                                                     |
-| :----------------- | :------------------------------------------------------- |
-| `winston`          | Ядро логирования, транспорт в консоль и OTLP.            |
-| `@opentelemetry/*` | SDK для работы с трейсами, метриками и экспортом.        |
-| **OTel Collector** | Централизованный шлюз: прием, обогащение, маршрутизация. |
-| **Grafana Stack**  | Визуализация (Loki, Tempo, Prometheus).                  |
-| **Telegram Bot**   | Канал для оперативных алертов.                           |
+| Компонент                                     | Роль                                                              |
+| :-------------------------------------------- | :---------------------------------------------------------------- |
+| **nestjs-otel**                               | NestJS-native интеграция OTel: MetricService, TraceService, @Span |
+| **Pino**                                      | Ядро логирования, stdout + автообогащение трейсом                 |
+| **@fastify/otel**                             | Автоматическая инструментация Fastify (спаны, метрики HTTP)       |
+| **@opentelemetry/auto-instrumentations-node** | http и системные метрики                                          |
+| **OTLP/HTTP Exporters**                       | Экспорт логов, метрик и трейсов в OTel Collector                  |
+| **OTel Collector**                            | Централизованный шлюз: прием, обогащение, маршрутизация           |
+| **Grafana Stack**                             | Визуализация: Loki (логи), Tempo (трейсы), Prometheus (метрики)   |
+| **Telegram Bot**                              | Канал для оперативных алертов на основе DLQ и пороговых метрик    |
