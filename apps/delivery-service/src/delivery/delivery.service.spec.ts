@@ -2,11 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryService } from './delivery.service';
 import { StrategyFactory } from './strategies/strategy.factory';
 import { Mode, Notification, Provider } from '@app/shared';
-import { MetricService } from 'nestjs-otel';
-import { Logger } from 'nestjs-pino';
-import { Counter } from '@opentelemetry/api';
 import { CHANNELS } from './channels/channels.constants';
 import { Channel } from './channels/core/channel.abstract';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('DeliveryService', () => {
   let service: DeliveryService;
@@ -15,11 +13,9 @@ describe('DeliveryService', () => {
     Promise<void>,
     [Notification, readonly Channel[]]
   >;
+  let mockEventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
-  let dummyMetricService: MetricService;
-  let dummyLogger: Logger;
-
-  const mockChannel: Channel = {
+  const mockChannel = {
     type: Provider.EMAIL,
     isSupports: jest.fn(),
     send: jest.fn(),
@@ -47,15 +43,9 @@ describe('DeliveryService', () => {
       .fn()
       .mockReturnValue({ execute: mockStrategyExecute });
 
-    const dummyCounter = { add: jest.fn() } as unknown as Counter;
-    dummyMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-    } as unknown as MetricService;
-
-    dummyLogger = {
-      log: jest.fn(),
-      debug: jest.fn(),
-    } as unknown as Logger;
+    mockEventEmitter = {
+      emit: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -71,17 +61,17 @@ describe('DeliveryService', () => {
           useValue: mockChannelsList,
         },
         {
-          provide: MetricService,
-          useValue: dummyMetricService,
-        },
-        {
-          provide: Logger,
-          useValue: dummyLogger,
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();
 
     service = module.get<DeliveryService>(DeliveryService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('constructor', () => {
@@ -94,7 +84,7 @@ describe('DeliveryService', () => {
     it('should successfully fetch strategy from factory and execute it with channels list', async () => {
       mockStrategyExecute.mockResolvedValue(undefined);
 
-      await expect(service.deliver(mockNotification)).resolves.not.toThrow();
+      await expect(service.deliver(mockNotification)).resolves.toBeUndefined();
 
       expect(mockGetStrategy).toHaveBeenCalledTimes(1);
       expect(mockGetStrategy).toHaveBeenCalledWith(mockNotification.mode);
@@ -104,6 +94,14 @@ describe('DeliveryService', () => {
         mockNotification,
         mockChannelsList,
       );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('delivery.initiated', {
+        notification: mockNotification,
+      });
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('delivery.completed', {
+        notification: mockNotification,
+      });
     });
 
     it('should properly propagate errors upward if the executed strategy throws an exception', async () => {
@@ -116,6 +114,14 @@ describe('DeliveryService', () => {
 
       expect(mockGetStrategy).toHaveBeenCalledTimes(1);
       expect(mockStrategyExecute).toHaveBeenCalledTimes(1);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('delivery.initiated', {
+        notification: mockNotification,
+      });
+      expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
+        'delivery.completed',
+        expect.any(Object),
+      );
     });
 
     it('should propagate error if strategy factory fails to find a strategy', async () => {
@@ -130,6 +136,10 @@ describe('DeliveryService', () => {
 
       expect(mockGetStrategy).toHaveBeenCalledTimes(1);
       expect(mockStrategyExecute).not.toHaveBeenCalled();
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('delivery.initiated', {
+        notification: mockNotification,
+      });
     });
 
     it('should successfully pass an empty channels list to the strategy if no channels registered', async () => {
@@ -138,8 +148,7 @@ describe('DeliveryService', () => {
           DeliveryService,
           { provide: StrategyFactory, useValue: { get: mockGetStrategy } },
           { provide: CHANNELS, useValue: [] },
-          { provide: MetricService, useValue: dummyMetricService },
-          { provide: Logger, useValue: dummyLogger },
+          { provide: EventEmitter2, useValue: mockEventEmitter },
         ],
       }).compile();
 
@@ -148,7 +157,7 @@ describe('DeliveryService', () => {
 
       await expect(
         localService.deliver(mockNotification),
-      ).resolves.not.toThrow();
+      ).resolves.toBeUndefined();
       expect(mockStrategyExecute).toHaveBeenCalledWith(mockNotification, []);
     });
   });

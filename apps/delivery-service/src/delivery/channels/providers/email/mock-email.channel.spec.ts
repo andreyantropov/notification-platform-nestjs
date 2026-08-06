@@ -1,28 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockEmailChannel } from './mock-email.channel';
 import { Provider, Contact } from '@app/shared';
-import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
 import { ChannelContext } from '../../core/channel.context';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('MockEmailChannel', () => {
   let channel: MockEmailChannel;
 
   beforeEach(async () => {
-    const dummyCounter = { add: jest.fn() } as unknown as Counter;
-    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
-
-    const mockMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
-    } as unknown as MetricService;
-
-    const dummyLogger = {
-      log: jest.fn(),
-      debug: jest.fn(),
-    } as unknown as Logger;
-
+    jest.useRealTimers();
     jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
@@ -31,8 +17,7 @@ describe('MockEmailChannel', () => {
         {
           provide: ChannelContext,
           useValue: {
-            metrics: mockMetricService,
-            logger: dummyLogger,
+            events: { emit: jest.fn() } as unknown as EventEmitter2,
           } satisfies Partial<ChannelContext>,
         },
       ],
@@ -53,7 +38,7 @@ describe('MockEmailChannel', () => {
       };
       const message = 'Test email payload';
 
-      await expect(channel.send(contact, message)).resolves.not.toThrow();
+      await expect(channel.send(contact, message)).resolves.toBeUndefined();
 
       expect(console.log).toHaveBeenCalledWith(
         `[MOCK EMAIL] To: test@email.com | Message: Test email payload`,

@@ -9,6 +9,8 @@ import { authConfig } from './config/auth.config';
 import { rmqConfig } from './config/rmq.config';
 import { HealthModule } from './health/health.module';
 import { ReceiveModule } from './receive/receive.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -20,6 +22,10 @@ import { ReceiveModule } from './receive/receive.module';
         'apps/receive-service/.env',
       ],
       load: [appConfig, authConfig, rmqConfig],
+    }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
     }),
     OpenTelemetryModule.forRoot({}),
     LoggerModule.forRoot({
@@ -41,6 +47,7 @@ import { ReceiveModule } from './receive/receive.module';
     }),
     ReceiveModule,
     HealthModule,
+    TelemetryModule,
   ],
   providers: [
     {

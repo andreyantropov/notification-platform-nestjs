@@ -9,9 +9,7 @@ import {
   NOTIFICATION_RECEIVED,
 } from '@app/shared';
 import { RMQ_CLIENT } from './receive.constants';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
-import { Counter } from '@opentelemetry/api';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 type CreateNotification = Omit<Notification, 'id' | 'clientId' | 'createdAt'>;
 
@@ -22,37 +20,17 @@ jest.mock('node:crypto', () => ({
 describe('ReceiveService', () => {
   let service: ReceiveService;
   let clientProxyMock: jest.Mocked<Pick<ClientProxy, 'emit' | 'connect'>>;
-  let dummyMetricService: MetricService;
-  let dummyLogger: Logger;
-  let dummyCounter: Counter;
-
-  let mockAdd: jest.Mock;
-  let mockLog: jest.Mock;
-  let mockDebug: jest.Mock;
+  let mockEventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   beforeEach(async () => {
-    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-
     clientProxyMock = {
       emit: jest.fn().mockReturnValue(of(undefined)),
       connect: jest.fn().mockResolvedValue(undefined),
     };
 
-    mockAdd = jest.fn();
-    dummyCounter = { add: mockAdd };
-
-    dummyMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-    } as unknown as MetricService;
-
-    mockLog = jest.fn();
-    mockDebug = jest.fn();
-
-    dummyLogger = {
-      log: mockLog,
-      debug: mockDebug,
-      error: jest.fn(),
-    } as unknown as Logger;
+    mockEventEmitter = {
+      emit: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -62,12 +40,8 @@ describe('ReceiveService', () => {
           useValue: clientProxyMock,
         },
         {
-          provide: MetricService,
-          useValue: dummyMetricService,
-        },
-        {
-          provide: Logger,
-          useValue: dummyLogger,
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();
@@ -111,8 +85,6 @@ describe('ReceiveService', () => {
       expect(result.createdAt).toBeDefined();
       expect(new Date(result.createdAt).toString()).not.toBe('Invalid Date');
 
-      expect(mockAdd).toHaveBeenCalledWith(1, { clientId: mockClientId });
-
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(1);
       expect(clientProxyMock.emit).toHaveBeenCalledWith(
         NOTIFICATION_RECEIVED,
@@ -123,6 +95,15 @@ describe('ReceiveService', () => {
           message: 'Hello, World!',
         }),
       );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('receive.initiated', {
+        createNotification: mockCreateNotificationDto,
+        clientId: mockClientId,
+      });
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('receive.completed', {
+        notification: result,
+      });
     });
 
     it('should throw an error if RabbitMQ emit fails', async () => {
@@ -132,6 +113,15 @@ describe('ReceiveService', () => {
       await expect(
         service.receive(mockCreateNotificationDto, mockClientId),
       ).rejects.toThrow('RMQ Connection Lost');
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('receive.initiated', {
+        createNotification: mockCreateNotificationDto,
+        clientId: mockClientId,
+      });
+      expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
+        'receive.completed',
+        expect.any(Object),
+      );
     });
   });
 
@@ -166,13 +156,20 @@ describe('ReceiveService', () => {
 
       expect(clientProxyMock.emit).toHaveBeenCalledTimes(2);
 
-      expect(mockDebug).toHaveBeenCalledWith(
-        { batch_size: 2 },
-        'Инициирована обработка пакета входящих уведомлений',
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'receive.batch.initiated',
+        {
+          batchSize: 2,
+          clientId: mockClientId,
+        },
       );
-      expect(mockLog).toHaveBeenCalledWith(
-        { batch_size: 2 },
-        'Пакет уведомлений успешно поставлен в очередь',
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'receive.batch.completed',
+        {
+          batchSize: 2,
+          clientId: mockClientId,
+        },
       );
     });
 

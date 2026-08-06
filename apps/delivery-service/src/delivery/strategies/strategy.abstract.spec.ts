@@ -1,10 +1,8 @@
 import { Strategy } from './strategy.abstract';
 import { Contact, Provider, Mode } from '@app/shared';
-import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
 import { Channel } from '../channels/core/channel.abstract';
 import { ChannelContext } from '../channels/core/channel.context';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('Strategy', () => {
   class TestableStrategy extends Strategy {
@@ -21,11 +19,16 @@ describe('Strategy', () => {
   }
 
   class MockChannel extends Channel {
-    protected readonly type: Provider;
-
-    constructor(type: Provider, ctx: ChannelContext) {
+    constructor(
+      public readonly type: Provider,
+      public sendSpy: jest.Mock<Promise<void>, [Contact, string]>,
+      ctx: ChannelContext,
+    ) {
       super(ctx);
-      this.type = type;
+    }
+
+    override async send(contact: Contact, message: string): Promise<void> {
+      return this.sendSpy(contact, message);
     }
 
     protected async performSend(): Promise<void> {
@@ -37,30 +40,26 @@ describe('Strategy', () => {
   let emailChannel: MockChannel;
   let bitrixChannel: MockChannel;
   let mockChannelContext: ChannelContext;
+  let dummySendSpy: jest.Mock<Promise<void>, [Contact, string]>;
 
   beforeEach(() => {
-    const dummyCounter = { add: jest.fn() } as unknown as Counter;
-    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
-
-    const mockMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
-    } as unknown as MetricService;
-
-    const dummyLogger = {
-      log: jest.fn(),
-      debug: jest.fn(),
-    } as unknown as Logger;
-
     mockChannelContext = {
-      metrics: mockMetricService,
-      logger: dummyLogger,
+      events: { emit: jest.fn() } as unknown as EventEmitter2,
     };
 
     strategy = new TestableStrategy();
+    dummySendSpy = jest.fn<Promise<void>, [Contact, string]>();
 
-    emailChannel = new MockChannel(Provider.EMAIL, mockChannelContext);
-    bitrixChannel = new MockChannel(Provider.BITRIX, mockChannelContext);
+    emailChannel = new MockChannel(
+      Provider.EMAIL,
+      dummySendSpy,
+      mockChannelContext,
+    );
+    bitrixChannel = new MockChannel(
+      Provider.BITRIX,
+      dummySendSpy,
+      mockChannelContext,
+    );
   });
 
   describe('getAttempts', () => {
@@ -106,6 +105,7 @@ describe('Strategy', () => {
 
       const secondEmailChannel = new MockChannel(
         Provider.EMAIL,
+        dummySendSpy,
         mockChannelContext,
       );
 
@@ -133,8 +133,16 @@ describe('Strategy', () => {
       const contact1: Contact = { type: Provider.EMAIL, value: 'c1@test.com' };
       const contact2: Contact = { type: Provider.EMAIL, value: 'c2@test.com' };
 
-      const ch1 = new MockChannel(Provider.EMAIL, mockChannelContext);
-      const ch2 = new MockChannel(Provider.EMAIL, mockChannelContext);
+      const ch1 = new MockChannel(
+        Provider.EMAIL,
+        dummySendSpy,
+        mockChannelContext,
+      );
+      const ch2 = new MockChannel(
+        Provider.EMAIL,
+        dummySendSpy,
+        mockChannelContext,
+      );
 
       const result = strategy.testGetAttempts([ch1, ch2], [contact1, contact2]);
 

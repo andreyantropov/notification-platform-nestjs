@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { MetricService } from 'nestjs-otel';
-import { Logger } from 'nestjs-pino';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ChannelContext {
-  constructor(
-    public readonly metrics: MetricService,
-    public readonly logger: Logger,
-  ) {}
+  constructor(public readonly events: EventEmitter2) {}
 }

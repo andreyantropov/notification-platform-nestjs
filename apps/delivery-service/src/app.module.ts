@@ -12,6 +12,8 @@ import { rmqConfig } from './config/rmq.config';
 import { smtpConfig } from './config/smtp.config';
 import { HealthModule } from './health/health.module';
 import { DeliveryModule } from './delivery/delivery.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -30,6 +32,10 @@ import { DeliveryModule } from './delivery/delivery.module';
         rmqConfig,
         smtpConfig,
       ],
+    }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
     }),
     OpenTelemetryModule.forRoot({}),
     LoggerModule.forRoot({
@@ -51,6 +57,7 @@ import { DeliveryModule } from './delivery/delivery.module';
     }),
     DeliveryModule,
     HealthModule,
+    TelemetryModule,
   ],
   providers: [
     {

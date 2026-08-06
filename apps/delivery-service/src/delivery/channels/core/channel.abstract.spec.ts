@@ -1,39 +1,28 @@
 import { Channel } from './channel.abstract';
 import { Contact, Provider } from '@app/shared';
 import { ChannelContext } from './channel.context';
-import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('Channel', () => {
   class TestChannel extends Channel {
     protected readonly type = Provider.EMAIL;
 
-    public async performSend(): Promise<void> {
+    protected async performSend(): Promise<void> {
       return Promise.resolve();
     }
   }
 
   let channel: TestChannel;
   let mockContext: ChannelContext;
-
-  let mockCounter: jest.Mocked<Pick<Counter, 'add'>>;
-  let mockHistogram: jest.Mocked<Pick<Histogram, 'record'>>;
-  let mockLogger: jest.Mocked<Pick<Logger, 'log' | 'debug' | 'warn'>>;
+  let mockEventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   beforeEach(() => {
-    mockCounter = { add: jest.fn() };
-    mockHistogram = { record: jest.fn() };
-    mockLogger = { log: jest.fn(), debug: jest.fn(), warn: jest.fn() };
-
-    const mockMetricService = {
-      getCounter: jest.fn().mockReturnValue(mockCounter),
-      getHistogram: jest.fn().mockReturnValue(mockHistogram),
-    } as unknown as MetricService;
+    mockEventEmitter = {
+      emit: jest.fn(),
+    };
 
     mockContext = {
-      metrics: mockMetricService,
-      logger: mockLogger as unknown as Logger,
+      events: mockEventEmitter as unknown as EventEmitter2,
     };
 
     channel = new TestChannel(mockContext, { maxConcurrent: 1, minTime: 0 });
@@ -70,7 +59,7 @@ describe('Channel', () => {
       const message = 'Hello';
 
       const performSendSpy = jest
-        .spyOn(channel, 'performSend')
+        .spyOn(channel, 'performSend' as keyof TestChannel)
         .mockResolvedValue(undefined);
 
       await expect(channel.send(contact, message)).resolves.toBeUndefined();
@@ -83,78 +72,74 @@ describe('Channel', () => {
       const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
       const networkError = new Error('SMTP Timeout');
 
-      jest.spyOn(channel, 'performSend').mockRejectedValue(networkError);
+      jest
+        .spyOn(channel, 'performSend' as keyof TestChannel)
+        .mockRejectedValue(networkError);
 
       await expect(channel.send(contact, 'Hello')).rejects.toThrow(
         'SMTP Timeout',
       );
     });
 
-    it('should record success metrics and log debug/info upon successful send', async () => {
+    it('should emit initiated and success events upon successful send', async () => {
       const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
       const message = 'Hello';
 
       await channel.send(contact, message);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        { provider: Provider.EMAIL, contact: 'test@test.com' },
-        `Инициирована отправка уведомления.`,
-      );
-
-      expect(mockLogger.log).toHaveBeenCalledWith(
-        { provider: Provider.EMAIL, contact: 'test@test.com' },
-        `Уведомление успешно отправлено.`,
-      );
-
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-
-      expect(mockCounter.add).toHaveBeenCalledTimes(1);
-      expect(mockCounter.add).toHaveBeenCalledWith(1, {
-        provider: Provider.EMAIL,
-        status: 'success',
-      });
-
-      expect(mockHistogram.record).toHaveBeenCalledTimes(1);
-      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), {
-        provider: Provider.EMAIL,
-        status: 'success',
-      });
-    });
-
-    it('should record error metrics, log debug and warn, but NOT log info when performSend fails', async () => {
-      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
-      const testError = new Error('Failed');
-      jest.spyOn(channel, 'performSend').mockRejectedValue(testError);
-
-      await expect(channel.send(contact, 'Hello')).rejects.toThrow('Failed');
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        { provider: Provider.EMAIL, contact: 'test@test.com' },
-        `Инициирована отправка уведомления.`,
-      );
-
-      expect(mockLogger.log).not.toHaveBeenCalled();
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'channel.send.initiated',
         {
-          error: testError,
           provider: Provider.EMAIL,
           contact: 'test@test.com',
         },
-        `Сбой при отправке уведомления`,
       );
 
-      expect(mockCounter.add).toHaveBeenCalledTimes(1);
-      expect(mockCounter.add).toHaveBeenCalledWith(1, {
-        provider: Provider.EMAIL,
-        status: 'error',
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'channel.send.successed',
+        expect.objectContaining({
+          provider: Provider.EMAIL,
+          contact: 'test@test.com',
+        }),
+      );
 
-      expect(mockHistogram.record).toHaveBeenCalledTimes(1);
-      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), {
-        provider: Provider.EMAIL,
-        status: 'error',
-      });
+      expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
+        'channel.send.failed',
+        expect.any(Object),
+      );
+    });
+
+    it('should emit initiated and failed events when performSend fails', async () => {
+      const contact: Contact = { type: Provider.EMAIL, value: 'test@test.com' };
+      const testError = new Error('Failed');
+
+      jest
+        .spyOn(channel, 'performSend' as keyof TestChannel)
+        .mockRejectedValue(testError);
+
+      await expect(channel.send(contact, 'Hello')).rejects.toThrow('Failed');
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'channel.send.initiated',
+        {
+          provider: Provider.EMAIL,
+          contact: 'test@test.com',
+        },
+      );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'channel.send.failed',
+        expect.objectContaining({
+          provider: Provider.EMAIL,
+          contact: 'test@test.com',
+          error: testError,
+        }),
+      );
+
+      expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
+        'channel.send.successed',
+        expect.any(Object),
+      );
     });
   });
 });

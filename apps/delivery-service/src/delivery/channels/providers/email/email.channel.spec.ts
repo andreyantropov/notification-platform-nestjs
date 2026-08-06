@@ -2,11 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EmailChannel } from './email.channel';
 import { Provider, Contact } from '@app/shared';
-import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
 import { emailConfig } from '../../../../config/email.config';
 import { ChannelContext } from '../../core/channel.context';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 describe('EmailChannel', () => {
   let channel: EmailChannel;
   let mockSendMail: jest.Mock;
@@ -25,20 +24,7 @@ describe('EmailChannel', () => {
   beforeEach(async () => {
     mockSendMail = jest.fn();
     mockVerify = jest.fn();
-
-    const dummyCounter = { add: jest.fn() } as unknown as Counter;
-    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
-
-    const mockMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
-    } as unknown as MetricService;
-
-    const dummyLogger = {
-      warn: jest.fn(),
-      log: jest.fn(),
-      debug: jest.fn(),
-    } as unknown as Logger;
+    jest.useRealTimers();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,8 +45,7 @@ describe('EmailChannel', () => {
         {
           provide: ChannelContext,
           useValue: {
-            metrics: mockMetricService,
-            logger: dummyLogger,
+            events: { emit: jest.fn() } as unknown as EventEmitter2,
           } satisfies Partial<ChannelContext>,
         },
       ],
@@ -90,7 +75,7 @@ describe('EmailChannel', () => {
     it('should successfully send an email via mailerService', async () => {
       mockSendMail.mockResolvedValue({ messageId: 'smtp-123' });
 
-      await expect(channel.send(contact, message)).resolves.not.toThrow();
+      await expect(channel.send(contact, message)).resolves.toBeUndefined();
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       expect(mockSendMail).toHaveBeenCalledWith({
@@ -115,7 +100,7 @@ describe('EmailChannel', () => {
     it('should successfully pass health check when SMTP server is reachable and authorized', async () => {
       mockVerify.mockResolvedValue(true);
 
-      await expect(channel.checkHealth()).resolves.not.toThrow();
+      await expect(channel.checkHealth()).resolves.toBeUndefined();
       expect(mockVerify).toHaveBeenCalledTimes(1);
     });
 

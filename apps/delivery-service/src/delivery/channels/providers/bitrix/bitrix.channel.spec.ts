@@ -4,11 +4,9 @@ import { of, throwError } from 'rxjs';
 import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BitrixChannel } from './bitrix.channel';
 import { Provider, Contact } from '@app/shared';
-import { Counter, Histogram } from '@opentelemetry/api';
-import { Logger } from 'nestjs-pino';
-import { MetricService } from 'nestjs-otel';
 import { bitrixConfig } from '../../../../config/bitrix.config';
 import { ChannelContext } from '../../core/channel.context';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 interface BitrixResponse {
   readonly result?: unknown;
@@ -44,20 +42,6 @@ describe('BitrixChannel', () => {
   beforeEach(async () => {
     mockHttpPost = jest.fn();
 
-    const dummyCounter = { add: jest.fn() } as unknown as Counter;
-    const dummyHistogram = { record: jest.fn() } as unknown as Histogram;
-
-    const mockMetricService = {
-      getCounter: jest.fn().mockReturnValue(dummyCounter),
-      getHistogram: jest.fn().mockReturnValue(dummyHistogram),
-    } as unknown as MetricService;
-
-    const dummyLogger = {
-      warn: jest.fn(),
-      log: jest.fn(),
-      debug: jest.fn(),
-    } as unknown as Logger;
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BitrixChannel,
@@ -74,8 +58,7 @@ describe('BitrixChannel', () => {
         {
           provide: ChannelContext,
           useValue: {
-            metrics: mockMetricService,
-            logger: dummyLogger,
+            events: { emit: jest.fn() } as unknown as EventEmitter2,
           } satisfies Partial<ChannelContext>,
         },
       ],
@@ -103,7 +86,7 @@ describe('BitrixChannel', () => {
       const axiosResponse = createAxiosResponse({ result: 42 });
       mockHttpPost.mockReturnValue(of(axiosResponse));
 
-      await expect(channel.send(contact, message)).resolves.not.toThrow();
+      await expect(channel.send(contact, message)).resolves.toBeUndefined();
 
       expect(mockHttpPost).toHaveBeenCalledWith(
         expect.stringContaining('https://bitrix24.ru'),
@@ -139,12 +122,12 @@ describe('BitrixChannel', () => {
       const axiosResponse = createAxiosResponse({ result: { ID: '1' } });
       mockHttpPost.mockReturnValue(of(axiosResponse));
 
-      await expect(channel.checkHealth()).resolves.not.toThrow();
+      await expect(channel.checkHealth()).resolves.toBeUndefined();
 
       expect(mockHttpPost).toHaveBeenCalledWith(
         expect.stringContaining('https://bitrix24.ru'),
-        expect.any(Object),
-        expect.any(Object),
+        expect.objectContaining({}),
+        expect.objectContaining({ timeout: 5_000 }),
       );
     });
 
