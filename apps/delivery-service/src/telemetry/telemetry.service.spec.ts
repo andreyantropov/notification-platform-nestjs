@@ -97,7 +97,7 @@ describe('TelemetryService', () => {
   });
 
   describe('channel events', () => {
-    it('should log debug info on channel.delivery.initiated', () => {
+    it('should log debug info on channel.send.initiated', () => {
       const payload = { provider: 'email', contact: 'test@test.com' };
 
       service.handleChannelDeliveryInitiated(payload);
@@ -109,7 +109,7 @@ describe('TelemetryService', () => {
       );
     });
 
-    it('should record success metrics and log info on channel.delivery.success', () => {
+    it('should record success metrics and log info on channel.send.success', () => {
       const payload = {
         provider: 'email',
         contact: 'test@test.com',
@@ -136,7 +136,7 @@ describe('TelemetryService', () => {
       );
     });
 
-    it('should record error metrics and log warn on channel.delivery.failed', () => {
+    it('should record error metrics and log warn on channel.send.failed', () => {
       const testError = new Error('SMTP Timeout');
       const payload = {
         provider: 'email',

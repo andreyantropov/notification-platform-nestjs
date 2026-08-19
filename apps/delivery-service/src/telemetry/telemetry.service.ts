@@ -81,7 +81,7 @@ export class TelemetryService {
     );
   }
 
-  @OnEvent('channel.delivery.initiated')
+  @OnEvent('channel.send.initiated')
   handleChannelDeliveryInitiated(payload: ChannelBasePayload): void {
     const { provider, contact } = payload;
 
@@ -91,7 +91,7 @@ export class TelemetryService {
     );
   }
 
-  @OnEvent('channel.delivery.success')
+  @OnEvent('channel.send.success')
   handleChannelDeliverySuccess(payload: ChannelResultPayload): void {
     const { provider, contact, duration } = payload;
 
@@ -102,7 +102,7 @@ export class TelemetryService {
     this.durationHistogram.record(duration, labels);
   }
 
-  @OnEvent('channel.delivery.failed')
+  @OnEvent('channel.send.failed')
   handleChannelDeliveryFailed(payload: ChannelResultPayload): void {
     const { provider, contact, duration, error } = payload;
 
