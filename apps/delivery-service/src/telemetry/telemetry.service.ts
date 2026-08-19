@@ -107,7 +107,7 @@ export class TelemetryService {
     const { provider, contact, duration, error } = payload;
 
     this.logger.warn(
-      { error, provider, contact },
+      { err: error, provider, contact },
       `Сбой при отправке уведомления`,
     );
 

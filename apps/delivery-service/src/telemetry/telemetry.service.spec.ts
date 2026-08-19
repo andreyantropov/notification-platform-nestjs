@@ -150,7 +150,7 @@ describe('TelemetryService', () => {
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         {
-          error: payload.error,
+          err: payload.error,
           provider: payload.provider,
           contact: payload.contact,
         },
