@@ -22,7 +22,7 @@ describe('Channel', () => {
     };
 
     mockContext = {
-      events: mockEventEmitter as unknown as EventEmitter2,
+      events: mockEventEmitter,
     };
 
     channel = new TestChannel(mockContext, { maxConcurrent: 1, minTime: 0 });
@@ -96,7 +96,7 @@ describe('Channel', () => {
       );
 
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'channel.send.successed',
+        'channel.send.successeded',
         expect.objectContaining({
           provider: Provider.EMAIL,
           contact: 'test@test.com',
@@ -137,7 +137,7 @@ describe('Channel', () => {
       );
 
       expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
-        'channel.send.successed',
+        'channel.send.successeded',
         expect.any(Object),
       );
     });
