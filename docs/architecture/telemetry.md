@@ -91,7 +91,7 @@ async send(contact: Contact, message: string): Promise<void> {
       provider: this.type, contact: contact.value,
     });
     await this.performSend(contact, message);
-    this.ctx.events.emit('channel.send.success', {
+    this.ctx.events.emit('channel.send.successed', {
       provider: this.type, contact: contact.value,
       duration: Date.now() - startTime,
     });
@@ -105,7 +105,7 @@ async send(contact: Contact, message: string): Promise<void> {
 }
 
 // TelemetryService delivery-service: подписывается и считает
-@OnEvent('channel.send.success')
+@OnEvent('channel.send.successed')
 handleSuccess(payload: ChannelResultPayload): void {
   const labels = { provider: payload.provider, status: 'success' };
   this.sendCounter.add(1, labels);
@@ -118,12 +118,12 @@ handleSuccess(payload: ChannelResultPayload): void {
 
 ### Реестр бизнес-метрик
 
-| Имя метрики                                    | Тип       | Описание                                      | Лейблы               | Сервис           | Событие-триггер               |
-| :--------------------------------------------- | :-------- | :-------------------------------------------- | :------------------- | :--------------- | :---------------------------- |
-| `notification_incoming_received_total`         | Counter   | Принятые и поставленные в очередь уведомления | `clientId`           | receive-service  | `notification.received`       |
-| `notification_strategy_executions_total`       | Counter   | Запуски бизнес-стратегий                      | `strategy_type`      | delivery-service | `delivery.initiated`          |
-| `notification_channel_delivery_attempts_total` | Counter   | Попытки отправки по провайдерам               | `provider`, `status` | delivery-service | `channel.send.success/failed` |
-| `notification_channel_delivery_duration_ms`    | Histogram | Длительность отправки внешним шлюзом          | `provider`, `status` | delivery-service | `channel.send.success/failed` |
+| Имя метрики                                    | Тип       | Описание                                      | Лейблы               | Сервис           | Событие-триггер                 |
+| :--------------------------------------------- | :-------- | :-------------------------------------------- | :------------------- | :--------------- | :------------------------------ |
+| `notification_incoming_received_total`         | Counter   | Принятые и поставленные в очередь уведомления | `clientId`           | receive-service  | `notification.received`         |
+| `notification_strategy_executions_total`       | Counter   | Запуски бизнес-стратегий                      | `strategy_type`      | delivery-service | `delivery.initiated`            |
+| `notification_channel_delivery_attempts_total` | Counter   | Попытки отправки по провайдерам               | `provider`, `status` | delivery-service | `channel.send.successed/failed` |
+| `notification_channel_delivery_duration_ms`    | Histogram | Длительность отправки внешним шлюзом          | `provider`, `status` | delivery-service | `channel.send.successed/failed` |
 
 ---
 

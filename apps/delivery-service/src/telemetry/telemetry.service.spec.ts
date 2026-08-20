@@ -109,7 +109,7 @@ describe('TelemetryService', () => {
       );
     });
 
-    it('should record success metrics and log info on channel.send.success', () => {
+    it('should record success metrics and log info on channel.send.successed', () => {
       const payload = {
         provider: 'email',
         contact: 'test@test.com',

@@ -91,7 +91,7 @@ export class TelemetryService {
     );
   }
 
-  @OnEvent('channel.send.success')
+  @OnEvent('channel.send.successed')
   handleChannelDeliverySuccess(payload: ChannelResultPayload): void {
     const { provider, contact, duration } = payload;
 
