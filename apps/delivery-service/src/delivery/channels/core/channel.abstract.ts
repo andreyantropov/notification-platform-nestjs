@@ -30,7 +30,7 @@ export abstract class Channel {
 
         await this.performSend(contact, message);
 
-        this.ctx.events.emit('channel.send.successeded', {
+        this.ctx.events.emit('channel.send.successed', {
           provider,
           contact: contact.value,
           duration: Date.now() - startTime,

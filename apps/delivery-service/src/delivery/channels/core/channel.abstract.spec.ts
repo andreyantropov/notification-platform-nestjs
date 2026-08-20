@@ -96,7 +96,7 @@ describe('Channel', () => {
       );
 
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-        'channel.send.successeded',
+        'channel.send.successed',
         expect.objectContaining({
           provider: Provider.EMAIL,
           contact: 'test@test.com',
@@ -137,7 +137,7 @@ describe('Channel', () => {
       );
 
       expect(mockEventEmitter.emit).not.toHaveBeenCalledWith(
-        'channel.send.successeded',
+        'channel.send.successed',
         expect.any(Object),
       );
     });
