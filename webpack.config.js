@@ -7,7 +7,7 @@ module.exports = function (options) {
       ...options.resolve,
       plugins: [
         new TsconfigPathsPlugin({
-          cconfigFile:
+          configFile:
             options.compilerOptions?.tsConfigPath || './tsconfig.json',
         }),
       ],
