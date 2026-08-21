@@ -20,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       audience,
       issuer,
       jwksOptions,
+      algorithms,
     }: ConfigType<typeof authConfig>,
   ) {
     super({
@@ -27,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       ignoreExpiration,
       audience,
       issuer,
+      algorithms: [...algorithms],
       secretOrKeyProvider: passportJwtSecret(jwksOptions),
     });
   }

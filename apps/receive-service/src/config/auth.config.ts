@@ -33,6 +33,7 @@ export const authConfig = registerAs('auth', () => {
     ignoreExpiration: false,
     audience: config.AUTH_AUDIENCE,
     issuer: config.AUTH_ISSUER_URL,
+    algorithms: ['RS256'] as const,
     jwksOptions: {
       cache: true,
       rateLimit: true,

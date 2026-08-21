@@ -12,9 +12,18 @@ describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
 
   const mockConfig: ConfigType<typeof authConfig> = {
+    ignoreExpiration: false,
     audience: 'test-audience',
-    issuerUrl: 'https://keycloak.test',
-    jwksUri: 'https://keycloak.test/protocol/openid-connect/certs',
+    issuer: 'https://keycloak.test',
+    algorithms: ['RS256'],
+    jwksOptions: {
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 10,
+      cacheMaxAge: 15 * 60 * 1_000,
+      timeout: 5_000,
+      jwksUri: 'https://keycloak.test/protocol/openid-connect/certs',
+    },
   };
 
   beforeEach(async () => {
