@@ -11,6 +11,7 @@ import {
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { NotificationBatchResponseDto } from './dto/notification-batch-response.dto';
 import { GetClientId } from '../auth/decorators/get-client-id.decorator';
+import { OtelMethodCounter } from 'nestjs-otel';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -38,6 +39,7 @@ export class ReceiveController {
     status: 400,
     description: 'Ошибка валидации входных данных.',
   })
+  @OtelMethodCounter()
   async createNotification(
     @Body() data: CreateNotificationDto,
     @GetClientId() clientId: string,
@@ -61,6 +63,7 @@ export class ReceiveController {
     status: 400,
     description: 'Ошибка валидации входных данных.',
   })
+  @OtelMethodCounter()
   async createNotificationBatch(
     @Body() data: CreateNotificationBatchDto,
     @GetClientId() clientId: string,
