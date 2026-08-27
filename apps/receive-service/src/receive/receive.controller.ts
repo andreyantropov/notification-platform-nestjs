@@ -44,7 +44,7 @@ export class ReceiveController {
     @Body() data: CreateNotificationDto,
     @GetClientId() clientId: string,
   ): Promise<NotificationResponseDto> {
-    return await this.receiveService.receive(data, clientId);
+    return this.receiveService.receive(data, clientId);
   }
 
   @Post('batch')
