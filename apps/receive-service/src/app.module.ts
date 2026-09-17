@@ -32,7 +32,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       pinoHttp: {
         level: process.env.LOG_LEVEL,
         transport:
-          process.env.NODE_ENV == Environment.DEVELOPMENT
+          process.env.NODE_ENV === Environment.DEVELOPMENT
             ? {
                 target: 'pino-pretty',
                 options: {
