@@ -51,7 +51,6 @@ export class CreateNotificationDto {
   @ApiPropertyOptional({
     enum: Mode,
     default: Mode.SEQUENTIAL,
-    required: false,
     description: 'Режим отправки уведомления',
   })
   @IsEnum(Mode)
