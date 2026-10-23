@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { OpenTelemetryModule } from 'nestjs-otel';
 import { LoggerModule } from 'nestjs-pino';
-import { Environment } from '@app/shared';
+import { Environment, LogLevel } from '@app/shared';
 import { appConfig } from './config/app.config';
 import { axiosConfig } from './config/axios.config';
 import { bitrixConfig } from './config/bitrix.config';
@@ -53,6 +53,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
                 },
               }
             : undefined,
+        customLogLevel: (req, res, err) => {
+          if (res.statusCode >= 500 || err) return LogLevel.ERROR;
+          if (res.statusCode >= 400) return LogLevel.WARN;
+          return LogLevel.INFO;
+        },
       },
     }),
     DeliveryModule,

@@ -23,7 +23,6 @@ export class ReceiveService {
     clientId: string,
   ): Promise<Notification> {
     this.events.emit('receive.initiated', { createNotification, clientId });
-
     const notification: Notification = {
       ...createNotification,
       id: randomUUID(),
