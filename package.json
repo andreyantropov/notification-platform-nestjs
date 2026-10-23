@@ -115,6 +115,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!\\.pnpm|@nestjs/event-emitter)"
+    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],

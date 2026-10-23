@@ -8,7 +8,6 @@ import {
 } from '@nestjs/platform-fastify';
 import { RmqOptions } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
-import { LoggingInterceptor } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -19,8 +18,6 @@ async function bootstrap() {
 
   const logger = app.get(Logger);
   app.useLogger(logger);
-
-  app.useGlobalInterceptors(new LoggingInterceptor(logger));
 
   app.enableShutdownHooks();
 

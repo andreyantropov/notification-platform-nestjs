@@ -8,7 +8,6 @@ import {
 } from '@nestjs/platform-fastify';
 import { setupSwagger } from './config/swagger.config';
 import { Logger } from 'nestjs-pino';
-import { LoggingInterceptor } from '@app/shared';
 import { VersioningType } from '@nestjs/common';
 
 async function bootstrap(): Promise<void> {
@@ -20,8 +19,6 @@ async function bootstrap(): Promise<void> {
 
   const logger = app.get(Logger);
   app.useLogger(logger);
-
-  app.useGlobalInterceptors(new LoggingInterceptor(logger));
 
   app.enableShutdownHooks();
 

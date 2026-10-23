@@ -5,5 +5,4 @@ export * from './enums/provider.enum';
 export * from './interfaces/contact.interface';
 export * from './interfaces/notification.interface';
 export * from './dto/send-notification.dto';
-export * from './interceptors/logging.interceptor';
 export * from './constants/rmq.constants';
